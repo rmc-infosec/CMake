@@ -1,0 +1,8 @@
+enable_language(C)
+add_library(base STATIC base.c)
+add_library(middle STATIC middle.c)
+target_link_libraries(middle PUBLIC base)
+add_library(top STATIC top.c)
+target_link_libraries(top PRIVATE middle)
+add_executable(app main.c)
+target_link_libraries(app PRIVATE top)

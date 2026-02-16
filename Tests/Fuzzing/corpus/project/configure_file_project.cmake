@@ -1,0 +1,20 @@
+set(PROJECT_VERSION_MAJOR 2)
+set(PROJECT_VERSION_MINOR 5)
+set(PROJECT_VERSION_PATCH 3)
+set(PROJECT_DESCRIPTION "A fuzzer test project")
+set(ENABLE_FEATURE_X ON)
+
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/config.h.in"
+  "#define VERSION_MAJOR @PROJECT_VERSION_MAJOR@\n"
+  "#define VERSION_MINOR @PROJECT_VERSION_MINOR@\n"
+  "#define VERSION_PATCH @PROJECT_VERSION_PATCH@\n"
+  "#define DESCRIPTION \"@PROJECT_DESCRIPTION@\"\n"
+  "#cmakedefine ENABLE_FEATURE_X\n"
+  "#cmakedefine01 ENABLE_FEATURE_Y\n"
+)
+
+configure_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/config.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+  @ONLY
+)
