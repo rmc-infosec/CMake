@@ -1,0 +1,33 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "empty-binary",
+      "binaryDir": ""
+    },
+    {
+      "name": "self-inherit",
+      "inherits": "self-inherit",
+      "binaryDir": "${sourceDir}/build"
+    },
+    {
+      "name": "missing-parent",
+      "inherits": "nonexistent-preset",
+      "binaryDir": "${sourceDir}/build"
+    },
+    {
+      "name": "dup1",
+      "binaryDir": "${sourceDir}/build"
+    },
+    {
+      "name": "dup1",
+      "binaryDir": "${sourceDir}/build2"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "bad-configure-ref",
+      "configurePreset": "nonexistent"
+    }
+  ]
+}

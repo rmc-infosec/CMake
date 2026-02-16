@@ -100,3 +100,6 @@ add_fuzzer(cmScriptFuzzer cmScriptFuzzer.cxx)
 
 # CMake project-mode fuzzer (full configure + generate pipeline)
 add_fuzzer(cmProjectFuzzer cmProjectFuzzer.cxx)
+
+# CMake presets fuzzer (CMakePresets.json parsing)
+add_fuzzer(cmCMakePresetsFuzzer cmCMakePresetsFuzzer.cxx)
