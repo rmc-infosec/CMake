@@ -266,12 +266,37 @@ find_program(FUZZ_PYTHON NAMES python3 python)
 find_library(FUZZ_MATH_LIB NAMES m)
 find_path(FUZZ_STDIO_H NAMES stdio.h)
 find_file(FUZZ_DEV_NULL NAMES null PATHS /dev NO_DEFAULT_PATH)
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/pkgconfig")
+file(WRITE "${CMAKE_BINARY_DIR}/pkgconfig/fuzzlocal.pc"
+  "Name: fuzzlocal\n"
+  "Description: local fuzz package\n"
+  "Version: 1.0.0\n"
+  "Cflags: -I${CMAKE_CURRENT_SOURCE_DIR}/include\n"
+)
+if(COMMAND cmake_pkg_config)
+  set(CMAKE_PKG_CONFIG_PC_PATH "${CMAKE_BINARY_DIR}/pkgconfig")
+  cmake_pkg_config(EXTRACT fuzzlocal QUIET)
+  cmake_pkg_config(POPULATE fuzzlocal QUIET)
+  cmake_pkg_config(IMPORT fuzzlocal QUIET)
+endif()
+if(POLICY CMP0153)
+  cmake_policy(SET CMP0153 OLD)
+endif()
+if(POLICY CMP0054)
+  cmake_policy(PUSH)
+  cmake_policy(SET CMP0054 NEW)
+  cmake_policy(GET CMP0054 _cmp0054_state)
+  cmake_policy(POP)
+endif()
+enable_language(C)
+enable_language(CXX)
 
 add_library(fuzz_pre_core STATIC core.c lib.c)
 add_library(fuzz_pre_obj OBJECT helper.c)
 add_library(fuzz_pre_shared SHARED plugin.cpp)
 add_library(fuzz_pre_iface INTERFACE)
 add_executable(fuzz_pre_app main.cpp app.c)
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 target_sources(fuzz_pre_app PRIVATE "$<TARGET_OBJECTS:fuzz_pre_obj>" wrapper.cpp)
 target_link_libraries(fuzz_pre_app PRIVATE
@@ -322,6 +347,13 @@ set_target_properties(fuzz_pre_shared PROPERTIES
   VERSION 1.2.3
   SOVERSION 1
 )
+target_compile_features(fuzz_pre_app PRIVATE cxx_std_11)
+if(COMMAND target_precompile_headers)
+  target_precompile_headers(fuzz_pre_app PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/mylib.h"
+  )
+endif()
+get_target_property(_fuzz_pre_core_type fuzz_pre_core TYPE)
 
 file(WRITE "${CMAKE_BINARY_DIR}/gen_src.c" "int generated_symbol(void) { return 0; }\n")
 set_source_files_properties("${CMAKE_BINARY_DIR}/generated.c" PROPERTIES GENERATED TRUE)
@@ -343,6 +375,11 @@ set_property(SOURCE core.c PROPERTY COMPILE_DEFINITIONS CORE_SOURCE_FILE=1)
 set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
   "${CMAKE_BINARY_DIR}/generated.c"
 )
+set_directory_properties(PROPERTIES
+  ADDITIONAL_MAKE_CLEAN_FILES "${CMAKE_BINARY_DIR}/legacy_write.txt"
+)
+get_directory_property(_dir_clean_files ADDITIONAL_MAKE_CLEAN_FILES)
+get_directory_property(_dir_project_name DEFINITION PROJECT_NAME)
 add_custom_target(fuzz_stamp ALL
   COMMAND "${CMAKE_COMMAND}" -E touch "${CMAKE_BINARY_DIR}/fuzz.stamp"
   BYPRODUCTS "${CMAKE_BINARY_DIR}/fuzz.stamp"
@@ -352,6 +389,68 @@ add_custom_target(fuzz_stamp ALL
 enable_testing()
 add_test(NAME fuzz_pre_app_smoke COMMAND fuzz_pre_app)
 set_tests_properties(fuzz_pre_app_smoke PROPERTIES WILL_FAIL FALSE)
+get_test_property(fuzz_pre_app_smoke WILL_FAIL _test_will_fail)
+get_cmake_property(_all_vars VARIABLES)
+site_name(_site_name_value)
+set(_remove_list alpha beta gamma delta)
+remove(_remove_list beta delta)
+write_file("${CMAKE_BINARY_DIR}/legacy_write.txt" "legacy_write_file\n")
+write_file("${CMAKE_BINARY_DIR}/legacy_write.txt" "legacy_append\n" APPEND)
+if(COMMAND cmake_file_api)
+  cmake_file_api(
+    QUERY
+    API_VERSION 1
+    CODEMODEL 2
+    CACHE 2
+    CMAKEFILES 1
+    TOOLCHAINS 1
+  )
+endif()
+if(COMMAND cmake_instrumentation)
+  cmake_instrumentation(
+    API_VERSION 1
+    DATA_VERSION 1
+    HOOKS postGenerate
+    OPTIONS trace
+    CALLBACK ${CMAKE_COMMAND} -E echo instrumentation_callback
+  )
+endif()
+cmake_language(EVAL CODE "set(_lang_eval_value 1)")
+cmake_language(CALL message STATUS "cmake_language_call")
+cmake_language(DEFER CALL message STATUS "cmake_language_defer")
+cmake_language(DEFER GET_CALL_IDS _lang_defer_ids)
+set(_sep_args "arg1 arg2 \"arg 3\"")
+separate_arguments(_sep_args UNIX_COMMAND "${_sep_args}")
+get_filename_component(_cfg_name "${CMAKE_BINARY_DIR}/cfg.out" NAME)
+block(SCOPE_FOR VARIABLES)
+  set(_block_count 0)
+  foreach(_it IN ITEMS a b c d)
+    if(_it STREQUAL "b")
+      continue()
+    endif()
+    math(EXPR _block_count "${_block_count} + 1")
+  endforeach()
+endblock()
+set(_sample_list one two three)
+list(APPEND _sample_list four)
+list(REMOVE_ITEM _sample_list two)
+list(JOIN _sample_list ":" _sample_joined)
+list(TRANSFORM _sample_list TOUPPER)
+string(CONCAT _concat_value A B C)
+string(FIND "abcdef" "cd" _find_index)
+string(REPEAT "x" 3 _repeat_value)
+string(REGEX REPLACE "a" "A" _regex_value "banana")
+execute_process(
+  COMMAND "${CMAKE_COMMAND}" -E echo execute_process_path
+  OUTPUT_VARIABLE _execute_process_out
+)
+exec_program("${CMAKE_COMMAND}"
+  ARGS "-E echo exec_program_path"
+  OUTPUT_VARIABLE _exec_program_out
+  RETURN_VALUE _exec_program_ret
+)
+file(WRITE "${CMAKE_BINARY_DIR}/cfg.in" "project=@PROJECT_NAME@\n")
+configure_file("${CMAKE_BINARY_DIR}/cfg.in" "${CMAKE_BINARY_DIR}/cfg.out" @ONLY)
 
 file(WRITE "${CMAKE_BINARY_DIR}/input.txt" "alpha\nbeta\ngamma\n")
 file(APPEND "${CMAKE_BINARY_DIR}/input.txt" "delta\n")
@@ -393,6 +492,30 @@ if(COMMAND cmake_path)
   cmake_path(COMPARE "${_path_build}" EQUAL "${_path_build}" _path_same)
 endif()
 
+source_group("fuzz/legacy" FILES main.c app.c)
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" PREFIX "tree" FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/mylib.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/main.c"
+)
+define_property(SOURCE PROPERTY FUZZ_SOURCE_TAG
+  BRIEF_DOCS "fuzz source tag"
+  FULL_DOCS "fuzz source tag"
+)
+set_property(SOURCE main.c PROPERTY FUZZ_SOURCE_TAG "seeded")
+get_source_file_property(_main_language main.c LANGUAGE)
+build_command(_fuzz_build_cmd
+  CONFIGURATION Debug
+  PARALLEL_LEVEL 2
+  TARGET fuzz_pre_app
+)
+cmake_host_system_information(RESULT _host_info
+  QUERY NUMBER_OF_LOGICAL_CORES HOSTNAME OS_NAME
+)
+set(_loop_count 0)
+while(_loop_count LESS 3)
+  math(EXPR _loop_count "${_loop_count} + 1")
+endwhile()
+
 file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/gen_info_$<CONFIG>.txt"
   CONTENT
     "cfg=$<CONFIG>\n"
@@ -416,6 +539,45 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/mylib.h" DESTINATION include 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/" DESTINATION include
   FILES_MATCHING PATTERN "*.h"
 )
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/legacy_subdir")
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/legacy_subdir/CMakeLists.txt" "
+add_library(legacy_targets STATIC legacy_obj.c)
+add_executable(legacy_app legacy_app.c)
+target_include_directories(legacy_targets PRIVATE \"${CMAKE_CURRENT_SOURCE_DIR}/legacy_subdir/include\")
+")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/legacy_subdir/include")
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/legacy_subdir/legacy_obj.c" "int legacy_obj(void) { return 0; }\n")
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/legacy_subdir/legacy_app.c" "int main(void) { return 0; }\n")
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/legacy_subdir/include/legacy_headers.h" "#pragma once\n")
+file(INSTALL
+  DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/legacy_subdir/include"
+  DESTINATION "${CMAKE_BINARY_DIR}/legacy-subdir-copy"
+  FILES_MATCHING PATTERN "*.h"
+  FILE_PERMISSIONS OWNER_READ OWNER_WRITE
+  USE_SOURCE_PERMISSIONS
+)
+subdirs(legacy_subdir)
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/modern_subdir")
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/modern_subdir/CMakeLists.txt" "
+add_library(modern_targets STATIC modern_obj.c)
+")
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/modern_subdir/modern_obj.c" "int modern_obj(void) { return 0; }\n")
+link_libraries(fuzz_pre_core)
+add_subdirectory(modern_subdir)
+get_directory_property(_modern_project_name
+  DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/modern_subdir"
+  DEFINITION PROJECT_NAME
+)
+install_targets(/legacy legacy_targets legacy_app)
+install_files(/legacy .h mylib)
+install_files(/legacy "^.*\\.h$")
+install_files(/legacy FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/mylib.h"
+)
+install_programs(/legacy-programs app.c)
+install_programs(/legacy-programs FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/app.c"
+)
 if(EXISTS "${CMAKE_COMMAND}")
   install(PROGRAMS "${CMAKE_COMMAND}" DESTINATION tools RENAME cmake-tool)
 endif()
@@ -437,6 +599,52 @@ write_basic_package_version_file(
 export(TARGETS fuzz_pre_core fuzz_pre_shared fuzz_pre_app
   FILE "${CMAKE_BINARY_DIR}/FuzzPreExport.cmake"
   NAMESPACE FuzzPre::
+)
+export(EXPORT FuzzPreTargets
+  FILE "${CMAKE_BINARY_DIR}/FuzzPreExportSet.cmake"
+  NAMESPACE FuzzPreSet::
+)
+target_sources(fuzz_pre_app PRIVATE
+  FILE_SET headers TYPE HEADERS
+  BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/mylib.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/publicinclude.h"
+)
+install(TARGETS fuzz_pre_app
+  FILE_SET headers
+  DESTINATION include/fuzz_pre_headers
+)
+target_sources(legacy_targets PRIVATE
+  FILE_SET legacy_headers TYPE HEADERS
+  BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/legacy_subdir/include"
+  FILES "${CMAKE_CURRENT_SOURCE_DIR}/legacy_subdir/include/legacy_headers.h"
+)
+aux_source_directory("${CMAKE_CURRENT_SOURCE_DIR}/legacy_subdir" LEGACY_SUBDIR_SRCS)
+add_library(legacy_aux STATIC ${LEGACY_SUBDIR_SRCS})
+install(TARGETS legacy_aux
+  RUNTIME_DEPENDENCY_SET legacy_dep_set
+)
+install(RUNTIME_DEPENDENCY_SET legacy_dep_set
+  DESTINATION "legacy/dep"
+  PRE_EXCLUDE_REGEXES "^libc\\."
+  POST_EXCLUDE_REGEXES ""
+)
+install(TARGETS legacy_targets EXPORT LegacyExport)
+install(EXPORT LegacyExport DESTINATION legacy/export FILE FuzzLegacyExport.cmake)
+if(EXISTS "${CMAKE_BINARY_DIR}/CMakeCache.txt")
+  load_cache("${CMAKE_BINARY_DIR}" READ_WITH_PREFIX _cached_
+    CMAKE_GENERATOR CMAKE_COMMAND
+  )
+endif()
+
+file(ARCHIVE_CREATE
+  OUTPUT "${CMAKE_BINARY_DIR}/sample_archive.tar"
+  PATHS "${CMAKE_CURRENT_SOURCE_DIR}/include/mylib.h"
+)
+file(ARCHIVE_EXTRACT
+  INPUT "${CMAKE_BINARY_DIR}/sample_archive.tar"
+  DESTINATION "${CMAKE_BINARY_DIR}/sample_archive_extract"
 )
 )cmake";
 
