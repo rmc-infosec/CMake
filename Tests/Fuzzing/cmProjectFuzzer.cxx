@@ -21,7 +21,7 @@
  *   Sublime Text) to exercise IDE project file generation
  * - Creates FileAPI query marker files so cmFileAPI, cmFileAPICodemodel,
  *   cmFileAPICache, etc. are exercised during Generate()
- * - Sets CMAKE_MODULE_PATH so CMake can find its internal modules
+ * - Resolves and sets CMAKE_ROOT so CMake can load internal modules
  *   (CMakeCInformation.cmake, etc.) for full language setup
  */
 
@@ -42,8 +42,50 @@
 static constexpr size_t kMaxInputSize = 256 * 1024;
 static std::string g_sourceDir;
 static std::string g_buildDir;
-static std::string g_modulesPath;
 static std::string g_cmakeRoot;
+
+static bool hasValidCMakeRoot(std::string const& root)
+{
+  return !root.empty() &&
+    cmSystemTools::FileExists(root + "/Modules/CMake.cmake");
+}
+
+static std::string detectCMakeRoot(char const* argv0)
+{
+  cmSystemTools::FindCMakeResources(argv0);
+  std::string root = cmSystemTools::GetCMakeRoot();
+  if (hasValidCMakeRoot(root)) {
+    return root;
+  }
+
+  std::string envRoot;
+  if (cmSystemTools::GetEnv("CMAKE_ROOT", envRoot) &&
+      hasValidCMakeRoot(envRoot)) {
+    return cmSystemTools::ToNormalizedPathOnDisk(envRoot);
+  }
+
+  std::string srcRoot;
+  if (cmSystemTools::GetEnv("SRC", srcRoot)) {
+    std::string candidate =
+      cmSystemTools::ToNormalizedPathOnDisk(srcRoot + "/CMake");
+    if (hasValidCMakeRoot(candidate)) {
+      return candidate;
+    }
+  }
+
+  if (hasValidCMakeRoot("/src/CMake")) {
+    return "/src/CMake";
+  }
+
+  std::string exeDir =
+    cmSystemTools::GetFilenamePath(cmSystemTools::GetRealPath(argv0));
+  std::string adjacent = exeDir + "/src/CMake";
+  if (hasValidCMakeRoot(adjacent)) {
+    return cmSystemTools::ToNormalizedPathOnDisk(adjacent);
+  }
+
+  return root;
+}
 
 static void createDummySourceFiles(std::string const& dir)
 {
@@ -76,6 +118,7 @@ static void createDummySourceFiles(std::string const& dir)
 
   cmSystemTools::MakeDirectory(dir + "/include");
   cmSystemTools::MakeDirectory(dir + "/src");
+  cmSystemTools::MakeDirectory(dir + "/src/include");
 
   for (auto const& f : files) {
     std::string path = dir + "/" + f.name;
@@ -103,19 +146,11 @@ extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
   cmSystemTools::SetStdoutCallback([](std::string const&) {});
   cmSystemTools::SetStderrCallback([](std::string const&) {});
 
-  // Find the CMake Modules directory. In OSS-Fuzz, the CMake source tree
-  // is copied to <exe_dir>/src/CMake/ during the build. We need the
-  // Modules/ path so enable_language() can load CMakeCInformation.cmake
-  // and other internal modules needed for the generate pipeline.
-  {
-    std::string exeDir =
-      cmSystemTools::GetFilenamePath(cmSystemTools::GetRealPath((*argv)[0]));
-    std::string candidate = exeDir + "/src/CMake/Modules";
-    if (cmSystemTools::FileIsDirectory(candidate)) {
-      g_modulesPath = candidate;
-      g_cmakeRoot = exeDir + "/src/CMake";
-    }
-  }
+  // Resolve CMake resources using the same mechanism as the main executable,
+  // with explicit fallbacks for OSS-Fuzz/ClusterFuzzLite layouts.
+  char const* argv0 = (argv && *argv && (*argv)[0]) ? (*argv)[0]
+                                                     : "cmProjectFuzzer";
+  g_cmakeRoot = detectCMakeRoot(argv0);
 
   // Create unique temp directories
   char srcTmpl[] = "/tmp/cmake_fuzz_proj_src_XXXXXX";
@@ -227,14 +262,10 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
     if (!fp)
       return 0;
 
-    // Preamble: set CMAKE_MODULE_PATH so enable_language() can find
-    // internal CMake modules, then declare the project with C and CXX.
+    // Preamble: declare the project with C and CXX.
     // Compiler detection is skipped because the CMakeCache.txt already
     // has all compiler info (COMPILER_FORCED=TRUE).
     fprintf(fp, "cmake_minimum_required(VERSION 3.10)\n");
-    if (!g_modulesPath.empty()) {
-      fprintf(fp, "set(CMAKE_MODULE_PATH \"%s\")\n", g_modulesPath.c_str());
-    }
     fprintf(fp, "project(FuzzTest LANGUAGES C CXX)\n");
     fwrite(data, 1, contentSize, fp);
     fclose(fp);
