@@ -1,0 +1,12 @@
+$<OUTPUT_CONFIG:Release>
+$<OUTPUT_CONFIG:Debug>
+$<COMMAND_CONFIG:Release>
+$<COMMAND_CONFIG:Debug>
+$<INSTALL_PREFIX>
+$<ANGLE-R>
+$<COMMA>
+$<SEMICOLON>
+$<0:this text is ignored>
+$<1:this text is included>
+$<0:$<LOWER_CASE:HIDDEN>>
+$<1:$<UPPER_CASE:shown>>

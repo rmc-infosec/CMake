@@ -1,0 +1,29 @@
+$<LIST:LENGTH,a;b;c;d;e>
+$<LIST:GET,0,a;b;c>
+$<LIST:GET,1,x;y;z>
+$<LIST:GET,-1,x;y;z>
+$<LIST:SUBLIST,0,2,a;b;c;d>
+$<LIST:SUBLIST,1,3,a;b;c;d;e>
+$<LIST:FIND,c,a;b;c;d>
+$<LIST:JOIN,a;b;c,->
+$<LIST:JOIN,x;y;z, :: >
+$<LIST:APPEND,a;b;c,d,e>
+$<LIST:PREPEND,c;d,a,b>
+$<LIST:INSERT,0,x,a;b;c>
+$<LIST:REMOVE_ITEM,a;b;c;d,b,d>
+$<LIST:REMOVE_AT,a;b;c;d;e,1,3>
+$<LIST:REMOVE_DUPLICATES,a;b;a;c;b;d>
+$<LIST:FILTER,INCLUDE,^lib,liba;libb;src;libz>
+$<LIST:FILTER,EXCLUDE,^test,testA;src;testB;main>
+$<LIST:SORT,c;a;b;d>
+$<LIST:SORT,COMPARE,NATURAL,3;1;20;2>
+$<LIST:SORT,ORDER,DESCENDING,a;b;c>
+$<LIST:REVERSE,a;b;c;d>
+$<LIST:TRANSFORM,TOUPPER,hello;world>
+$<LIST:TRANSFORM,TOLOWER,HELLO;WORLD>
+$<LIST:TRANSFORM,APPEND,_suffix,a;b;c>
+$<LIST:TRANSFORM,PREPEND,prefix_,a;b;c>
+$<LIST:TRANSFORM,STRIP, hello ; world >
+$<LIST:TRANSFORM,REPLACE,old,new,old_value;old_item>
+$<LIST:POP_BACK,a;b;c;d>
+$<LIST:POP_FRONT,a;b;c;d>

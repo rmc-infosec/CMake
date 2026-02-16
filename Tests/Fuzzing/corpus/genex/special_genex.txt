@@ -1,0 +1,14 @@
+$<ANGLE-R>
+$<COMMA>
+$<SEMICOLON>
+$<0:ignored text>
+$<1:included text>
+$<GENEX_EVAL:$<LOWER_CASE:TEST>>
+$<TARGET_GENEX_EVAL:mylib,$<TARGET_PROPERTY:mylib,CUSTOM>>
+$<OUTPUT_CONFIG:Release>
+$<COMMAND_CONFIG:Debug>
+$<INSTALL_PREFIX>
+$<IN_LIST:foo,a;b;foo;c>
+$<LIST:LENGTH,a;b;c>
+$<LIST:GET,0,a;b;c>
+$<LIST:SUBLIST,1,2,a;b;c;d>
