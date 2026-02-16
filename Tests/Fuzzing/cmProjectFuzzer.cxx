@@ -17,6 +17,10 @@
  * - Creates dummy source files so targets can be fully processed
  * - Alternates between Unix Makefiles and Ninja generators
  *   to exercise both cmMakefileTargetGenerator and cmNinjaTargetGenerator
+ * - Selects extra IDE generators (Eclipse, CodeBlocks, CodeLite, Kate,
+ *   Sublime Text) to exercise IDE project file generation
+ * - Creates FileAPI query marker files so cmFileAPI, cmFileAPICodemodel,
+ *   cmFileAPICache, etc. are exercised during Generate()
  * - Sets CMAKE_MODULE_PATH so CMake can find its internal modules
  *   (CMakeCInformation.cmake, etc.) for full language setup
  */
@@ -141,10 +145,15 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
     return 0;
   }
 
-  // Use the last byte as a control byte for generator selection.
+  // Use the last byte as a control byte for generator/feature selection.
   // This byte is NOT written to the CMakeLists.txt file — only the
   // preceding bytes are used as CMake script content.
-  bool useNinja = (data[size - 1] & 1);
+  //   bit 0:   base generator (0=Unix Makefiles, 1=Ninja)
+  //   bits 1-3: extra generator (0=none, 1=Eclipse CDT4, 2=CodeBlocks,
+  //             3=CodeLite, 4=Kate, 5=Sublime Text 2)
+  uint8_t ctrl = data[size - 1];
+  bool useNinja = (ctrl & 1);
+  int extraGen = (ctrl >> 1) & 7;
   size_t contentSize = size - 1;
 
   // Create dummy source files for targets to reference
@@ -162,6 +171,18 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
       // cmMakefileTargetGenerator — different code paths.
       const char* generator = useNinja ? "Ninja" : "Unix Makefiles";
       const char* makeProgram = useNinja ? "/usr/bin/ninja" : "/usr/bin/make";
+
+      // Extra generator name table (0 = none)
+      static const char* extraGenNames[] = {
+        "",                // 0: no extra generator
+        "Eclipse CDT4",   // 1
+        "CodeBlocks",     // 2
+        "CodeLite",       // 3
+        "Kate",           // 4
+        "Sublime Text 2", // 5
+      };
+      const char* extraGenName =
+        (extraGen >= 1 && extraGen <= 5) ? extraGenNames[extraGen] : "";
 
       fprintf(fp,
               "# This is the CMakeCache file.\n"
@@ -189,6 +210,9 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
               "CMAKE_CXX_STANDARD_COMPUTED_DEFAULT:INTERNAL=17\n"
               "CMAKE_CXX_OUTPUT_EXTENSION:STRING=.o\n",
               generator, g_sourceDir.c_str(), makeProgram);
+      if (extraGenName[0] != '\0') {
+        fprintf(fp, "CMAKE_EXTRA_GENERATOR:INTERNAL=%s\n", extraGenName);
+      }
       if (!g_cmakeRoot.empty()) {
         fprintf(fp, "CMAKE_ROOT:INTERNAL=%s\n", g_cmakeRoot.c_str());
       }
@@ -214,6 +238,24 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
     fprintf(fp, "project(FuzzTest LANGUAGES C CXX)\n");
     fwrite(data, 1, contentSize, fp);
     fclose(fp);
+  }
+
+  // Create FileAPI query marker files so that cmake's ActualConfigure()
+  // and Generate() exercise the FileAPI reply-writing code paths
+  // (cmFileAPI, cmFileAPICodemodel, cmFileAPICache, etc.).
+  {
+    std::string queryDir = g_buildDir + "/.cmake/api/v1/query";
+    cmSystemTools::MakeDirectory(queryDir);
+    static const char* queryFiles[] = { "codemodel-v2", "cache-v2",
+                                        "cmakeFiles-v1", "toolchains-v1",
+                                        "configureLog-v1" };
+    for (auto const* qf : queryFiles) {
+      std::string path = queryDir + "/" + qf;
+      FILE* fp = fopen(path.c_str(), "wb");
+      if (fp) {
+        fclose(fp);
+      }
+    }
   }
 
   // Save CWD
