@@ -1,0 +1,31 @@
+# Platform detection patterns
+message(STATUS "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "CMAKE_HOST_SYSTEM_NAME: ${CMAKE_HOST_SYSTEM_NAME}")
+message(STATUS "CMAKE_HOST_SYSTEM_PROCESSOR: ${CMAKE_HOST_SYSTEM_PROCESSOR}")
+
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+  message(STATUS "Running on Linux")
+elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+  message(STATUS "Running on macOS")
+elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+  message(STATUS "Running on Windows")
+else()
+  message(STATUS "Running on ${CMAKE_HOST_SYSTEM_NAME}")
+endif()
+
+if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux|FreeBSD|OpenBSD")
+  message(STATUS "Unix-like system")
+endif()
+
+message(STATUS "CMake version: ${CMAKE_VERSION}")
+message(STATUS "CMake major: ${CMAKE_MAJOR_VERSION}")
+message(STATUS "CMake minor: ${CMAKE_MINOR_VERSION}")
+message(STATUS "CMake patch: ${CMAKE_PATCH_VERSION}")
+message(STATUS "CMake command: ${CMAKE_COMMAND}")
+message(STATUS "CTest command: ${CMAKE_CTEST_COMMAND}")
+message(STATUS "CPack command: ${CMAKE_CPACK_COMMAND}")
+
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.20")
+  message(STATUS "CMake 3.20+")
+endif()

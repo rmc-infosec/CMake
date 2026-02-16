@@ -1,0 +1,22 @@
+math(EXPR r1 "1 + 2")
+math(EXPR r2 "10 - 3")
+math(EXPR r3 "4 * 5")
+math(EXPR r4 "20 / 3")
+math(EXPR r5 "17 % 5")
+
+math(EXPR bit_and "0xFF & 0x0F")
+math(EXPR bit_or "0xF0 | 0x0F")
+math(EXPR bit_xor "0xFF ^ 0x0F")
+math(EXPR bit_not "~0" OUTPUT_FORMAT HEXADECIMAL)
+math(EXPR shift_l "1 << 8" OUTPUT_FORMAT HEXADECIMAL)
+math(EXPR shift_r "256 >> 4" OUTPUT_FORMAT HEXADECIMAL)
+
+math(EXPR complex "(1 + 2) * (3 + 4) - 5")
+math(EXPR nested "((1 + 2) * 3 + 4) * 5")
+math(EXPR hex_calc "0xDEAD + 0xBEEF" OUTPUT_FORMAT HEXADECIMAL)
+
+message(STATUS "Arithmetic: ${r1} ${r2} ${r3} ${r4} ${r5}")
+message(STATUS "Bitwise: ${bit_and} ${bit_or} ${bit_xor} ${bit_not}")
+message(STATUS "Shifts: ${shift_l} ${shift_r}")
+message(STATUS "Complex: ${complex} Nested: ${nested}")
+message(STATUS "Hex calc: ${hex_calc}")

@@ -1,0 +1,28 @@
+function(level1 val)
+  function(level2 val2)
+    function(level3 val3)
+      message(STATUS "Level3: ${val3}")
+      set(DEEP_RESULT "${val3}_deep" PARENT_SCOPE)
+    endfunction()
+    level3("${val2}_L3")
+    message(STATUS "Level2: ${val2} DEEP=${DEEP_RESULT}")
+    set(DEEP_RESULT "${DEEP_RESULT}" PARENT_SCOPE)
+  endfunction()
+  level2("${val}_L2")
+  message(STATUS "Level1: ${val} DEEP=${DEEP_RESULT}")
+  set(DEEP_RESULT "${DEEP_RESULT}" PARENT_SCOPE)
+endfunction()
+
+level1("start")
+message(STATUS "Top: DEEP=${DEEP_RESULT}")
+
+# PARENT_SCOPE propagation chain
+function(set_parent var value)
+  set(${var} "${value}" PARENT_SCOPE)
+endfunction()
+
+function(caller)
+  set_parent(MY_VAR "from_inner")
+  message(STATUS "In caller: MY_VAR=${MY_VAR}")
+endfunction()
+caller()
