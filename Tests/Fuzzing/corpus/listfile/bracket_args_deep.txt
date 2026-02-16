@@ -1,0 +1,13 @@
+message([=[
+  Bracket with = level 1
+  Contains "quotes" and ${vars} and $ENV{vars}
+  And \escapes\ and ;semicolons;
+  And # hash comments
+  And ( parentheses )
+]=])
+set(x [==[
+  Level 2 bracket ]=] still inside
+  Another ]=] still inside
+]==])
+set(y [[level 0 bracket]])
+set(z [===[level 3]===])

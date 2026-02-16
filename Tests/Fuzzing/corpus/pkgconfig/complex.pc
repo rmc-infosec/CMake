@@ -1,0 +1,16 @@
+prefix=/opt/mylib
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+datarootdir=${prefix}/share
+
+Name: MyComplexLib
+Description: A complex library with many dependencies
+URL: https://example.com/mylib
+Version: 2.3.4
+Requires: glib-2.0 >= 2.56, gio-2.0 >= 2.56
+Requires.private: libxml-2.0 >= 2.9, zlib >= 1.2.11
+Conflicts: oldlib <= 1.0
+Libs: -L${libdir} -lmylib -lmylib_util
+Libs.private: -L${libdir} -lmylib_internal -lpthread -ldl
+Cflags: -I${includedir}/mylib -I${includedir}/mylib/util -DMYLIB_API

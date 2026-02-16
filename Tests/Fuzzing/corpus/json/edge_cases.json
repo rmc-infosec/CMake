@@ -1,0 +1,16 @@
+{
+  "empty_string": "",
+  "empty_array": [],
+  "empty_object": {},
+  "unicode": "\u0048\u0065\u006c\u006c\u006f",
+  "escaped": "tab\there\nnewline\\backslash\"quote",
+  "large_number": 99999999999999999,
+  "negative": -42,
+  "float_precision": 3.141592653589793,
+  "scientific": 1.23e+10,
+  "negative_exp": 1.23e-5,
+  "deeply_nested": {"a": {"b": {"c": {"d": {"e": {"f": "deep"}}}}}},
+  "mixed_array": [1, "two", true, false, null, [3, 4], {"key": "val"}],
+  "special_chars": "path/to/file.txt",
+  "backslash_path": "C:\\Users\\test\\path"
+}

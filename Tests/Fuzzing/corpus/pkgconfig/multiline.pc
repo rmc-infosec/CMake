@@ -1,0 +1,12 @@
+prefix=/usr/local
+libdir=${prefix}/lib
+includedir=${prefix}/include
+extra_cflags=-DFOO=1 \
+  -DBAR=2 \
+  -DBAZ=3
+
+Name: MultiLine
+Description: A library testing multiline values
+Version: 1.0.0
+Libs: -L${libdir} -lmulti
+Cflags: -I${includedir} ${extra_cflags}

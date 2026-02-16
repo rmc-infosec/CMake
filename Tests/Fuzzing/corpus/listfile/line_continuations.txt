@@ -1,0 +1,16 @@
+set(LONG_VALUE \
+  "part1" \
+  "part2" \
+  "part3" \
+)
+message(STATUS \
+  "continued \
+message")
+if(TRUE \
+  AND \
+  TRUE)
+  message("ok")
+endif()
+set(x "line \
+continuation \
+in string")
