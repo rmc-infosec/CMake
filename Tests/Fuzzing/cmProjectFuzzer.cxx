@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -35,9 +36,12 @@
 
 #include "cmGlobalGenerator.h"
 #include "cmFileAPICodemodel.h"
+#include "cmDocumentation.h"
+#include "cmExecutionStatus.h"
 #include "cmGeneratorExpression.h"
 #include "cmMakefile.h"
 #include "cmMessenger.h"
+#include "cmPackageInfoReader.h"
 #include "cmState.h"
 #include "cmSystemTools.h"
 #include "cmake.h"
@@ -1303,6 +1307,203 @@ static void writeFileAPIQueries()
   }
 }
 
+static void writeTextFile(std::string const& path, char const* content)
+{
+  std::string parent = cmSystemTools::GetFilenamePath(path);
+  if (!parent.empty()) {
+    cmSystemTools::MakeDirectory(parent);
+  }
+  FILE* fp = fopen(path.c_str(), "wb");
+  if (fp) {
+    fputs(content, fp);
+    fclose(fp);
+  }
+}
+
+static void exerciseDocumentationPaths()
+{
+  std::ostringstream sink;
+
+  auto runDocs = [&sink](std::vector<std::string> const& argv) {
+    cmDocumentation docs;
+    docs.SetName("cmake");
+    docs.addCMakeStandardDocSections();
+    docs.SetShowGenerators(true);
+
+    std::vector<char const*> args;
+    args.reserve(argv.size());
+    for (std::string const& arg : argv) {
+      args.push_back(arg.c_str());
+    }
+
+    if (docs.CheckOptions(static_cast<int>(args.size()), args.data())) {
+      (void)docs.PrintRequestedDocumentation(sink);
+    }
+  };
+
+  runDocs({ "cmake", "--version=json-v1" });
+  runDocs({ "cmake", "--help-command", "project" });
+  runDocs({ "cmake", "--help-module", "CMakePrintHelpers" });
+  runDocs({ "cmake", "--help-policy", "CMP0001" });
+  runDocs({ "cmake", "--help-variable", "CMAKE_SOURCE_DIR" });
+  runDocs({ "cmake", "--help-property", "C_STANDARD" });
+  runDocs({ "cmake", "--help-command-list" });
+  runDocs({ "cmake", "--help-module-list" });
+  runDocs({ "cmake", "--help-variable-list" });
+  runDocs({ "cmake", "--help-manual-list" });
+}
+
+static void exercisePackageInfoReader(cmMakefile* makefile)
+{
+  if (!makefile) {
+    return;
+  }
+
+  std::string cpsDir = g_buildDir + "/cps-fuzz/FuzzPkg/cps";
+  std::string cpsRoot = cpsDir + "/FuzzPkg.cps";
+  std::string cpsAppendix = cpsDir + "/FuzzPkg-extra.cps";
+  std::string cpsConfig = cpsDir + "/FuzzPkg@debug.cps";
+  std::string cpsBroken = cpsDir + "/Broken.cps";
+  std::string modulesMeta = cpsDir + "/fuzz-modules.json";
+
+  writeTextFile(modulesMeta, "{ invalid json");
+  writeTextFile(cpsRoot,
+                "{\n"
+                "  \"cps_version\": \"0.14.0\",\n"
+                "  \"name\": \"FuzzPkg\",\n"
+                "  \"version\": \"2.4.1+local\",\n"
+                "  \"compat_version\": \"2.0.0\",\n"
+                "  \"cps_path\": \"@prefix@/cps\",\n"
+                "  \"configurations\": [\"release\", \"debug\"],\n"
+                "  \"default_license\": \"MIT\",\n"
+                "  \"default_components\": [\"core\", \"iface\"],\n"
+                "  \"requires\": {\n"
+                "    \"DepOne\": {\n"
+                "      \"version\": \"1.0.0\",\n"
+                "      \"components\": [\"Core\"],\n"
+                "      \"hints\": [\"@prefix@/deps\"]\n"
+                "    },\n"
+                "    \"DepTwo\": {\n"
+                "      \"components\": [\"Lib\"],\n"
+                "      \"hints\": [\"relative/path\"]\n"
+                "    }\n"
+                "  },\n"
+                "  \"components\": {\n"
+                "    \"core\": {\n"
+                "      \"type\": \"archive\",\n"
+                "      \"location\": \"@prefix@/lib/libfuzzpkg.a\",\n"
+                "      \"link_location\": \"@prefix@/lib/libfuzzpkg.so\",\n"
+                "      \"link_name\": \"fuzzpkg\",\n"
+                "      \"compile_features\": [\"cxx_std_20\", \"c_std_11\"],\n"
+                "      \"link_features\": [\"thread\"],\n"
+                "      \"link_languages\": [\"c\", \"c++\", \"fortran\", \"badlang\"],\n"
+                "      \"definitions\": {\n"
+                "        \"*\": { \"GLOBAL_DEF\": \"1\", \"EMPTY\": \"\" },\n"
+                "        \"c\": { \"C_ONLY\": null },\n"
+                "        \"cxx\": { \"CXX_ONLY\": \"x\" }\n"
+                "      },\n"
+                "      \"includes\": {\n"
+                "        \"*\": [\"@prefix@/include\", \"relative/include\"],\n"
+                "        \"cxx\": [\"@prefix@/include/cxx\"]\n"
+                "      },\n"
+                "      \"requires\": [\":iface\"],\n"
+                "      \"compile_requires\": [\":iface\"],\n"
+                "      \"link_requires\": [\":iface\"],\n"
+                "      \"dyld_requires\": [\":iface\"],\n"
+                "      \"link_libraries\": [\"m\", \"Threads::Threads\"],\n"
+                "      \"license\": \"Apache-2.0\",\n"
+                "      \"configurations\": {\n"
+                "        \"debug\": {\n"
+                "          \"definitions\": { \"*\": { \"CFG_DEBUG\": \"1\" } },\n"
+                "          \"includes\": { \"*\": [\"@prefix@/include/debug\"] },\n"
+                "          \"link_libraries\": [\"debug-extra\"],\n"
+                "          \"cpp_module_metadata\": \"fuzz-modules.json\"\n"
+                "        },\n"
+                "        \"release\": {\n"
+                "          \"definitions\": { \"*\": { \"CFG_RELEASE\": \"1\" } },\n"
+                "          \"link_libraries\": [\"release-extra\"]\n"
+                "        }\n"
+                "      }\n"
+                "    },\n"
+                "    \"iface\": {\n"
+                "      \"type\": \"interface\",\n"
+                "      \"definitions\": { \"*\": { \"IFACE\": \"1\" } },\n"
+                "      \"includes\": { \"*\": [\"@prefix@/include/iface\"] }\n"
+                "    },\n"
+                "    \"shared\": {\n"
+                "      \"type\": \"dylib\",\n"
+                "      \"location\": \"@prefix@/lib/libfuzzshared.so\",\n"
+                "      \"link_name\": \"fuzzshared\"\n"
+                "    },\n"
+                "    \"plugin\": {\n"
+                "      \"type\": \"module\",\n"
+                "      \"location\": \"@prefix@/lib/libfuzzplugin.so\"\n"
+                "    },\n"
+                "    \"sym\": { \"type\": \"symbolic\" },\n"
+                "    \"unknown\": { \"type\": \"mystery\" }\n"
+                "  }\n"
+                "}\n");
+  writeTextFile(cpsAppendix,
+                "{\n"
+                "  \"name\": \"FuzzPkg\",\n"
+                "  \"configuration\": \"test\",\n"
+                "  \"default_license\": \"BSD-3-Clause\",\n"
+                "  \"components\": {\n"
+                "    \"core\": {\n"
+                "      \"definitions\": { \"*\": { \"CFG_TEST\": \"1\" } },\n"
+                "      \"includes\": { \"*\": [\"@prefix@/include/test\"] }\n"
+                "    },\n"
+                "    \"iface\": {\n"
+                "      \"definitions\": { \"*\": { \"IFACE_TEST\": \"1\" } }\n"
+                "    }\n"
+                "  }\n"
+                "}\n");
+  writeTextFile(cpsConfig,
+                "{\n"
+                "  \"name\": \"FuzzPkg\",\n"
+                "  \"configuration\": \"debug\",\n"
+                "  \"components\": {\n"
+                "    \"core\": {\n"
+                "      \"definitions\": { \"*\": { \"CFG_EXTRA_DEBUG\": \"1\" } }\n"
+                "    },\n"
+                "    \"missing\": {\n"
+                "      \"definitions\": { \"*\": { \"MISSING\": \"1\" } }\n"
+                "    }\n"
+                "  }\n"
+                "}\n");
+  writeTextFile(cpsBroken, "{ invalid");
+
+  std::unique_ptr<cmPackageInfoReader> root =
+    cmPackageInfoReader::Read(makefile, cpsRoot);
+  if (!root) {
+    return;
+  }
+
+  (void)root->GetName();
+  (void)root->ParseVersion(root->GetVersion());
+  (void)root->ParseVersion(root->GetCompatVersion());
+  (void)root->GetRequirements();
+  (void)root->GetComponentNames();
+
+  cmExecutionStatus status(*makefile);
+  (void)root->ImportTargets(makefile, status, true);
+
+  std::unique_ptr<cmPackageInfoReader> appendix =
+    cmPackageInfoReader::Read(makefile, cpsAppendix, root.get());
+  if (appendix) {
+    (void)appendix->GetRequirements();
+    (void)appendix->ImportTargetConfigurations(makefile, status);
+  }
+
+  std::unique_ptr<cmPackageInfoReader> configReader =
+    cmPackageInfoReader::Read(makefile, cpsConfig, root.get());
+  if (configReader) {
+    (void)configReader->ImportTargetConfigurations(makefile, status);
+  }
+
+  (void)cmPackageInfoReader::Read(makefile, cpsBroken);
+}
+
 static void runConfigureAndGenerate(int& configureResult, int& generateResult)
 {
   std::string cwd = cmSystemTools::GetCurrentWorkingDirectory();
@@ -1488,8 +1689,63 @@ static void runConfigureAndGenerate(int& configureResult, int& generateResult)
                                                 nullptr, nullptr, "CXX");
         }
       }
+
+      exercisePackageInfoReader(lg->GetMakefile());
     }
   }
+
+  // Drive lightweight command-line argument parsing and reporting code paths
+  // in cmake.cxx without recursively invoking cmake::Run.
+  {
+    cmake cmArgs(cmState::Role::Project);
+    cmArgs.SetHomeDirectory(g_sourceDir);
+    cmArgs.SetHomeOutputDirectory(g_buildDir);
+
+    std::vector<std::string> cliArgs;
+    cliArgs.emplace_back("cmake");
+    cliArgs.emplace_back("-S");
+    cliArgs.emplace_back(g_sourceDir);
+    cliArgs.emplace_back("-B");
+    cliArgs.emplace_back(g_buildDir);
+    cliArgs.emplace_back("-G");
+    cliArgs.emplace_back("Unix Makefiles");
+    cliArgs.emplace_back("--trace");
+    cliArgs.emplace_back("--trace-format");
+    cliArgs.emplace_back("json-v1");
+    cliArgs.emplace_back("--trace-source");
+    cliArgs.emplace_back(g_sourceDir + "/CMakeLists.txt");
+    cliArgs.emplace_back("--trace-redirect");
+    cliArgs.emplace_back(g_buildDir + "/trace-fuzz.log");
+    cliArgs.emplace_back("--warn-uninitialized");
+    cliArgs.emplace_back("--no-warn-unused-cli");
+    cliArgs.emplace_back("--check-system-vars");
+    cliArgs.emplace_back("--compile-no-warning-as-error");
+    cliArgs.emplace_back("--link-no-warning-as-error");
+    cliArgs.emplace_back("--debug-output");
+    cliArgs.emplace_back("--debug-find");
+    cliArgs.emplace_back("--log-level");
+    cliArgs.emplace_back("DEBUG");
+    cliArgs.emplace_back("--log-context");
+    cliArgs.emplace_back("--project-file");
+    cliArgs.emplace_back("CMakeLists.txt");
+    cliArgs.emplace_back("--graphviz");
+    cliArgs.emplace_back(g_buildDir + "/graph-fuzz.dot");
+    cliArgs.emplace_back("--regenerate-during-build");
+    cliArgs.emplace_back("--toolchain");
+    cliArgs.emplace_back(g_sourceDir + "/toolchain.cmake");
+    cliArgs.emplace_back("--install-prefix");
+    cliArgs.emplace_back(g_buildDir + "/prefix-fuzz");
+    cmArgs.SetArgs(cliArgs);
+
+    std::vector<cmake::GeneratorInfo> gens;
+    cmArgs.GetRegisteredGenerators(gens);
+    (void)cmArgs.GetGeneratorsDocumentation();
+    (void)cmArgs.ReportCapabilities();
+    (void)cmArgs.CreateGlobalGenerator("Ninja");
+    (void)cmArgs.CreateGlobalGenerator("Unix Makefiles");
+    (void)cmArgs.CreateGlobalGenerator("Ninja Multi-Config");
+  }
+  exerciseDocumentationPaths();
 
   cmSystemTools::ChangeDirectory(cwd);
 }
