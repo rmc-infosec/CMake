@@ -239,11 +239,13 @@ file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/tmp/deep/dir")
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/logs")
 
 file(WRITE "${CMAKE_BINARY_DIR}/pkg/FuzzPkg/FuzzPkgConfig.cmake"
-  "add_library(FuzzPkg::Core INTERFACE IMPORTED)\n"
-  "set_target_properties(FuzzPkg::Core PROPERTIES\n"
-  "  INTERFACE_INCLUDE_DIRECTORIES \"${CMAKE_CURRENT_LIST_DIR}/../../include\"\n"
-  "  INTERFACE_COMPILE_DEFINITIONS \"FUZZPKG_ENABLED\"\n"
-  ")\n"
+  "if(NOT TARGET FuzzPkg::Core)\n"
+  "  add_library(FuzzPkg::Core INTERFACE IMPORTED)\n"
+  "  set_target_properties(FuzzPkg::Core PROPERTIES\n"
+  "    INTERFACE_INCLUDE_DIRECTORIES \"${CMAKE_CURRENT_LIST_DIR}/../../include\"\n"
+  "    INTERFACE_COMPILE_DEFINITIONS \"FUZZPKG_ENABLED\"\n"
+  "  )\n"
+  "endif()\n"
   "set(FuzzPkg_FOUND TRUE)\n"
 )
 file(WRITE "${CMAKE_BINARY_DIR}/pkg/FuzzPkg/FuzzPkgConfigVersion.cmake"
@@ -266,6 +268,15 @@ find_program(FUZZ_PYTHON NAMES python3 python)
 find_library(FUZZ_MATH_LIB NAMES m)
 find_path(FUZZ_STDIO_H NAMES stdio.h)
 find_file(FUZZ_DEV_NULL NAMES null PATHS /dev NO_DEFAULT_PATH)
+set(FuzzPkg_ROOT "${CMAKE_BINARY_DIR}/pkg")
+find_package(FuzzPkg QUIET CONFIG GLOBAL)
+find_package(NotHere QUIET CONFIGS NotHereConfig.cmake)
+find_package(NotHere QUIET CONFIG NAMES NotHereA NotHereB
+  PATHS "${CMAKE_BINARY_DIR}/pkg" NO_DEFAULT_PATH
+)
+find_package(Python QUIET COMPONENTS Interpreter)
+find_package(ZLIB QUIET)
+find_package(OpenSSL QUIET)
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/pkgconfig")
 file(WRITE "${CMAKE_BINARY_DIR}/pkgconfig/fuzzlocal.pc"
   "Name: fuzzlocal\n"
@@ -392,6 +403,17 @@ set_tests_properties(fuzz_pre_app_smoke PROPERTIES WILL_FAIL FALSE)
 get_test_property(fuzz_pre_app_smoke WILL_FAIL _test_will_fail)
 get_cmake_property(_all_vars VARIABLES)
 site_name(_site_name_value)
+try_compile(_try_compile_result
+  SOURCE_FROM_CONTENT try_compile_main.c "int main(void){return 0;}\n"
+  NO_CACHE
+  OUTPUT_VARIABLE _try_compile_output
+)
+try_run(_try_run_result _try_run_compile_result
+  SOURCE_FROM_CONTENT try_run_main.c "int main(void){return 0;}\n"
+  NO_CACHE
+  COMPILE_OUTPUT_VARIABLE _try_run_compile_output
+  RUN_OUTPUT_VARIABLE _try_run_output
+)
 set(_remove_list alpha beta gamma delta)
 remove(_remove_list beta delta)
 write_file("${CMAKE_BINARY_DIR}/legacy_write.txt" "legacy_write_file\n")
@@ -422,6 +444,15 @@ cmake_language(DEFER GET_CALL_IDS _lang_defer_ids)
 set(_sep_args "arg1 arg2 \"arg 3\"")
 separate_arguments(_sep_args UNIX_COMMAND "${_sep_args}")
 get_filename_component(_cfg_name "${CMAKE_BINARY_DIR}/cfg.out" NAME)
+function(fuzz_helper value)
+  set(_fuzz_helper_value "${value}" PARENT_SCOPE)
+endfunction()
+macro(fuzz_assign name value)
+  set(${name} "${value}")
+endmacro()
+fuzz_helper("helper_value")
+fuzz_assign(_macro_value "macro_set")
+cmake_parse_arguments(FZ "OPTIONAL" "ONE" "MULTI" OPTIONAL ONE one MULTI a b c)
 block(SCOPE_FOR VARIABLES)
   set(_block_count 0)
   foreach(_it IN ITEMS a b c d)
@@ -433,13 +464,53 @@ block(SCOPE_FOR VARIABLES)
 endblock()
 set(_sample_list one two three)
 list(APPEND _sample_list four)
+list(PREPEND _sample_list zero)
+list(INSERT _sample_list 2 inserted)
+list(POP_BACK _sample_list _sample_last)
+list(POP_FRONT _sample_list _sample_first)
+list(REMOVE_AT _sample_list 0)
 list(REMOVE_ITEM _sample_list two)
 list(JOIN _sample_list ":" _sample_joined)
+list(REMOVE_DUPLICATES _sample_list)
+list(REVERSE _sample_list)
+list(SORT _sample_list)
+list(SUBLIST _sample_list 0 2 _sample_sublist)
+list(FILTER _sample_list INCLUDE REGEX "^[A-Za-z]")
+list(TRANSFORM _sample_list APPEND "_x")
 list(TRANSFORM _sample_list TOUPPER)
+list(LENGTH _sample_list _sample_len)
+list(GET _sample_list 0 _sample_first_item)
+list(FIND _sample_list "THREE_X" _sample_find_idx)
+list(TRANSFORM _sample_list PREPEND "P_")
+list(TRANSFORM _sample_list REPLACE "^P_" "")
+list(TRANSFORM _sample_list STRIP)
+string(LENGTH "abcdef" _strlen)
 string(CONCAT _concat_value A B C)
+string(SUBSTRING "abcdef" 1 3 _substr)
+string(REPLACE ":" ";" _replace_out "${_sample_joined}")
 string(FIND "abcdef" "cd" _find_index)
+string(FIND "abcabc" "bc" _find_reverse REVERSE)
 string(REPEAT "x" 3 _repeat_value)
 string(REGEX REPLACE "a" "A" _regex_value "banana")
+string(TOUPPER "mixed" _upper_value)
+string(TOLOWER "MIXED" _lower_value)
+string(JSON _json_value GET "{\"obj\":{\"k\":\"v\"}}" obj k)
+string(MAKE_C_IDENTIFIER "fuzz-value-1" _c_ident)
+string(GENEX_STRIP "$<CONFIG>" _genex_stripped)
+string(TIMESTAMP _timestamp_value "%Y-%m-%dT%H:%M:%S" UTC)
+string(UUID _uuid_value
+  NAMESPACE 6ba7b810-9dad-11d1-80b4-00c04fd430c8
+  NAME fuzz
+  TYPE SHA1
+)
+set(_string_value "alpha")
+string(APPEND _string_value "_beta")
+string(PREPEND _string_value "pre_")
+string(JOIN "|" _string_joined one two three)
+string(HEX "fuzz" _hex_value)
+string(COMPARE LESS "abc" "bcd" _cmp_less)
+string(COMPARE EQUAL "${_string_value}" "${_string_value}" _cmp_equal)
+string(REGEX MATCHALL "[a-z]+" _regex_matches "A1b2c3")
 execute_process(
   COMMAND "${CMAKE_COMMAND}" -E echo execute_process_path
   OUTPUT_VARIABLE _execute_process_out
@@ -455,6 +526,7 @@ configure_file("${CMAKE_BINARY_DIR}/cfg.in" "${CMAKE_BINARY_DIR}/cfg.out" @ONLY)
 file(WRITE "${CMAKE_BINARY_DIR}/input.txt" "alpha\nbeta\ngamma\n")
 file(APPEND "${CMAKE_BINARY_DIR}/input.txt" "delta\n")
 file(READ "${CMAKE_BINARY_DIR}/input.txt" _fread LIMIT 128)
+file(READ "${CMAKE_BINARY_DIR}/input.txt" _fread_hex HEX LIMIT 32 OFFSET 1)
 file(STRINGS "${CMAKE_BINARY_DIR}/input.txt" _fstrings LIMIT_COUNT 8)
 file(SIZE "${CMAKE_BINARY_DIR}/input.txt" _fsize)
 file(SHA1 "${CMAKE_BINARY_DIR}/input.txt" _fsha1)
@@ -465,11 +537,23 @@ file(RENAME "${CMAKE_BINARY_DIR}/copied.txt" "${CMAKE_BINARY_DIR}/renamed.txt")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/include/" DESTINATION "${CMAKE_BINARY_DIR}/copied_include")
 file(GLOB _glob_c "${CMAKE_CURRENT_SOURCE_DIR}/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 file(GLOB_RECURSE _glob_src "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+file(GLOB _glob_rel LIST_DIRECTORIES false RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+  "${CMAKE_CURRENT_SOURCE_DIR}/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+)
+file(GLOB_RECURSE _glob_rel_src LIST_DIRECTORIES false RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+)
 file(RELATIVE_PATH _rel "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_BINARY_DIR}")
 file(REAL_PATH "${CMAKE_BINARY_DIR}/renamed.txt" _real BASE_DIRECTORY "${CMAKE_BINARY_DIR}")
 file(TO_CMAKE_PATH "${CMAKE_CURRENT_SOURCE_DIR}" _cm_path)
 file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}" _native_path)
 file(TOUCH "${CMAKE_BINARY_DIR}/touch.stamp")
+file(TOUCH_NOCREATE "${CMAKE_BINARY_DIR}/touch.stamp" "${CMAKE_BINARY_DIR}/not_created.stamp")
+file(CONFIGURE
+  OUTPUT "${CMAKE_BINARY_DIR}/file_configured.txt"
+  CONTENT "name=@PROJECT_NAME@\n"
+  @ONLY
+)
 file(CHMOD "${CMAKE_BINARY_DIR}/renamed.txt"
   PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
 )
@@ -477,7 +561,54 @@ file(CREATE_LINK "${CMAKE_BINARY_DIR}/renamed.txt"
   "${CMAKE_BINARY_DIR}/renamed.link"
   SYMBOLIC RESULT _link_result COPY_ON_ERROR
 )
+file(CREATE_LINK "${CMAKE_BINARY_DIR}/renamed.txt"
+  "${CMAKE_BINARY_DIR}/renamed_symlink"
+  SYMBOLIC RESULT _symlink_result
+)
+file(COPY_FILE "${CMAKE_BINARY_DIR}/input.txt"
+  "${CMAKE_BINARY_DIR}/copied_if_different.txt"
+  ONLY_IF_DIFFERENT
+  INPUT_MAY_BE_RECENT
+  RESULT _copy_if_diff_result
+)
+file(RENAME "${CMAKE_BINARY_DIR}/copied_if_different.txt"
+  "${CMAKE_BINARY_DIR}/renamed_no_replace.txt"
+  RESULT _rename_result
+  NO_REPLACE
+)
+if(_symlink_result STREQUAL "0")
+  file(READ_SYMLINK "${CMAKE_BINARY_DIR}/renamed_symlink" _read_symlink_value)
+endif()
+file(CHMOD_RECURSE "${CMAKE_BINARY_DIR}/copied_include"
+  FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+  DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+)
+file(COPY "${CMAKE_BINARY_DIR}/renamed_symlink"
+  DESTINATION "${CMAKE_BINARY_DIR}/copied_symlink_chain"
+  FOLLOW_SYMLINK_CHAIN
+)
+file(LOCK "${CMAKE_BINARY_DIR}/lock-area"
+  DIRECTORY
+  GUARD FILE
+  RESULT_VARIABLE _lock_result
+  TIMEOUT 0
+)
+file(LOCK "${CMAKE_BINARY_DIR}/lock-area" DIRECTORY RELEASE)
+file(DOWNLOAD "file://${CMAKE_BINARY_DIR}/input.txt" "${CMAKE_BINARY_DIR}/downloaded.txt"
+  STATUS _download_status
+  LOG _download_log
+)
+if(EXISTS "${CMAKE_COMMAND}")
+  file(GET_RUNTIME_DEPENDENCIES
+    RESOLVED_DEPENDENCIES_VAR _runtime_deps
+    UNRESOLVED_DEPENDENCIES_VAR _runtime_unresolved
+    EXECUTABLES "${CMAKE_COMMAND}"
+    POST_EXCLUDE_REGEXES "^$"
+  )
+endif()
 file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/tmp_remove")
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/mk/a" "${CMAKE_BINARY_DIR}/mk/b" RESULT _mk_result)
+file(REMOVE "${CMAKE_BINARY_DIR}/mk/b/does_not_exist.txt")
 
 if(COMMAND cmake_path)
   set(_path_var "${CMAKE_CURRENT_SOURCE_DIR}/src/../include/./mylib.h")
@@ -535,7 +666,31 @@ install(TARGETS fuzz_pre_core fuzz_pre_shared fuzz_pre_app
   ARCHIVE DESTINATION lib
   INCLUDES DESTINATION include
 )
+install(TARGETS fuzz_pre_shared
+  LIBRARY DESTINATION lib
+  COMPONENT Runtime
+  NAMELINK_COMPONENT Development
+)
+install(TARGETS fuzz_pre_app
+  RUNTIME_DEPENDENCIES
+    PRE_EXCLUDE_REGEXES "^libc\\."
+    POST_EXCLUDE_REGEXES "^$"
+  RUNTIME DESTINATION bin/runtime_dep
+)
+add_executable(fuzz_imported_tool IMPORTED GLOBAL)
+set_target_properties(fuzz_imported_tool PROPERTIES
+  IMPORTED_LOCATION "${CMAKE_COMMAND}"
+)
+install(IMPORTED_RUNTIME_ARTIFACTS fuzz_imported_tool
+  DESTINATION tools/imported
+)
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/mylib.h" DESTINATION include RENAME fuzz_mylib.h)
+install(FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/mylib.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/config.h"
+  TYPE INCLUDE
+)
+install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/app.c" TYPE BIN)
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/" DESTINATION include
   FILES_MATCHING PATTERN "*.h"
 )
@@ -604,6 +759,7 @@ export(EXPORT FuzzPreTargets
   FILE "${CMAKE_BINARY_DIR}/FuzzPreExportSet.cmake"
   NAMESPACE FuzzPreSet::
 )
+export(PACKAGE FuzzPre)
 target_sources(fuzz_pre_app PRIVATE
   FILE_SET headers TYPE HEADERS
   BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
