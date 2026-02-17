@@ -1,0 +1,15 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "InvalidRegex",
+      "binaryDir": "${sourceDir}/build",
+      "generator": "x",
+      "condition": {
+        "type": "matches",
+        "string": "a",
+        "regex": "+"
+      }
+    }
+  ]
+}

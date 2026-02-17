@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "configurePresets": [
+    {
+      "name": "ExtraPresetField",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build",
+      "invalid": true
+    }
+  ]
+}

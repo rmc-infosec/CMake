@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "configurePresets": [
+    {
+      "name": "ConditionFuture",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build",
+      "condition": true
+    }
+  ]
+}

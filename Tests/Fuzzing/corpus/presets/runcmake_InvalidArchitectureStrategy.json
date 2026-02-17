@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "configurePresets": [
+    {
+      "name": "InvalidArchitectureStrategy",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build",
+      "architecture": {
+        "strategy": {}
+      }
+    }
+  ]
+}

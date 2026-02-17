@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "configurePresets": [
+    {
+      "name": "InvalidVariables",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": []
+    }
+  ]
+}

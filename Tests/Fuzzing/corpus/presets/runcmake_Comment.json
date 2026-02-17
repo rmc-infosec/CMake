@@ -1,0 +1,11 @@
+// Comment
+{
+  "version": 1,
+  "configurePresets": [
+    {
+      "name": "Comment",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build"
+    }
+  ]
+}

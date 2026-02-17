@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "configurePresets": [
+    {
+      "name": [],
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build"
+    }
+  ]
+}

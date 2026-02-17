@@ -1,0 +1,39 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "zzzzzz",
+      "displayName": "Sleepy",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build/zzzzzz"
+    },
+    {
+      "name": "aaaaaaaa",
+      "displayName": "Screaming",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build/aaaaaaaa"
+    },
+    {
+      "name": "mmmmmm",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build/mmmmmm"
+    },
+    {
+      "name": "no-generator"
+    },
+    {
+      "name": "invalid-generator",
+      "generator": "Invalid Generator",
+      "binaryDir": "${sourceDir}/build/invalid"
+    },
+    {
+      "name": "invalid-macro",
+      "generator": "x",
+      "binaryDir": "$vendor{noexist}"
+    },
+    {
+      "name": "ListPresetsHidden",
+      "hidden": true
+    }
+  ]
+}

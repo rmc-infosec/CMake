@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "configurePresets": [
+    {
+      "name": "CyclicInheritance0",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build",
+      "inherits": [
+        "CyclicInheritance1"
+      ]
+    },
+    {
+      "name": "CyclicInheritance1",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build",
+      "inherits": [
+        "CyclicInheritance0"
+      ]
+    }
+  ]
+}

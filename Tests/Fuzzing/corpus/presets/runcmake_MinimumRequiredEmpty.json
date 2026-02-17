@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "cmakeMinimumRequired": {},
+  "configurePresets": [
+    {
+      "name": "MinimumRequiredEmpty",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build"
+    }
+  ]
+}

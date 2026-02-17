@@ -1,0 +1,13 @@
+{
+    "version": 4,
+    "configurePresets": [
+        {
+            "name": "PathListSepFuture",
+            "generator": "x",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "TEST_PATH_LIST_SEP": "${sourceDir}${pathListSep}${sourceDir}"
+            }
+        }
+    ]
+}

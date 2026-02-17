@@ -1,0 +1,11 @@
+{
+  "version": 7,
+  "include": ["$penv{}"],
+  "configurePresets": [
+    {
+      "name": "EmptyPenvInInclude",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build"
+    }
+  ]
+}

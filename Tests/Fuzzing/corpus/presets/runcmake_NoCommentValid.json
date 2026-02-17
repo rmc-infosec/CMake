@@ -1,0 +1,10 @@
+{
+  "version": 10,
+  "configurePresets": [
+    {
+      "name": "NoCommentValid",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "configurePresets": [
+    {
+      "name": "InvalidPresetVendor",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build",
+      "vendor": true
+    }
+  ]
+}
