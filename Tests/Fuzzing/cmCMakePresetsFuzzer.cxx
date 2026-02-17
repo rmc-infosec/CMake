@@ -75,7 +75,7 @@ static std::string buildStructuredPresetsJSON(std::string const& fuzzPayload)
   std::string json;
   json.reserve(4096 + fuzzPayload.size());
   json += "{\n";
-  json += "  \"version\": 4,\n";
+  json += "  \"version\": 11,\n";
   json += "  \"cmakeMinimumRequired\": { \"major\": 3, \"minor\": 20, \"patch\": 0 },\n";
   json += "  \"vendor\": { \"fuzz\": { \"blob\": \"";
   json += fuzzPayload;
@@ -99,8 +99,15 @@ static std::string buildStructuredPresetsJSON(std::string const& fuzzPayload)
   json += fuzzPayload;
   json += "\"\n";
   json += "      },\n";
-  json += "      \"warnings\": { \"dev\": true },\n";
-  json += "      \"errors\": { \"dev\": false }\n";
+  json += "      \"warnings\": { \"dev\": true, \"deprecated\": true },\n";
+  json += "      \"errors\": { \"dev\": false, \"deprecated\": false },\n";
+  json += "      \"condition\": {\n";
+  json += "        \"type\": \"allOf\",\n";
+  json += "        \"conditions\": [\n";
+  json += "          { \"type\": \"const\", \"value\": true },\n";
+  json += "          { \"type\": \"matches\", \"string\": \"${hostSystemName}\", \"regex\": \".*\" }\n";
+  json += "        ]\n";
+  json += "      }\n";
   json += "    },\n";
   json += "    {\n";
   json += "      \"name\": \"release\",\n";
@@ -120,6 +127,29 @@ static std::string buildStructuredPresetsJSON(std::string const& fuzzPayload)
   json += "  ],\n";
   json += "  \"testPresets\": [\n";
   json += "    { \"name\": \"test-base\", \"configurePreset\": \"base\", \"output\": { \"outputOnFailure\": true } }\n";
+  json += "  ],\n";
+  json += "  \"packagePresets\": [\n";
+  json += "    {\n";
+  json += "      \"name\": \"package-base\",\n";
+  json += "      \"configurePreset\": \"base\",\n";
+  json += "      \"generators\": [\"TGZ\", \"ZIP\"],\n";
+  json += "      \"variables\": { \"CPACK_THREADS\": \"2\" },\n";
+  json += "      \"output\": { \"debug\": true, \"verbose\": true },\n";
+  json += "      \"packageName\": \"fuzzpkg\",\n";
+  json += "      \"packageVersion\": \"1.2.3\",\n";
+  json += "      \"condition\": { \"type\": \"inList\", \"string\": \"Ninja\", \"list\": [\"Ninja\", \"Unix Makefiles\"] }\n";
+  json += "    }\n";
+  json += "  ],\n";
+  json += "  \"workflowPresets\": [\n";
+  json += "    {\n";
+  json += "      \"name\": \"workflow-base\",\n";
+  json += "      \"steps\": [\n";
+  json += "        { \"type\": \"configure\", \"name\": \"base\" },\n";
+  json += "        { \"type\": \"build\", \"name\": \"build-base\" },\n";
+  json += "        { \"type\": \"test\", \"name\": \"test-base\" },\n";
+  json += "        { \"type\": \"package\", \"name\": \"package-base\" }\n";
+  json += "      ]\n";
+  json += "    }\n";
   json += "  ]\n";
   json += "}\n";
   return json;
@@ -180,6 +210,11 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
   // Parse it through the presets graph
   cmCMakePresetsGraph graph;
   graph.ReadProjectPresets(g_tempDir, false);
+  graph.GetGeneratorForPreset("build-base");
+  graph.GetGeneratorForPreset("build-release");
+  graph.GetGeneratorForPreset("test-base");
+  graph.GetGeneratorForPreset("package-base");
+  graph.GetGeneratorForPreset("workflow-base");
 
   // Clean up the file for next iteration
   cmSystemTools::RemoveFile(g_tempDir + "/CMakePresets.json");

@@ -408,6 +408,53 @@ if(COMMAND target_precompile_headers)
     "${CMAKE_CURRENT_SOURCE_DIR}/include/mylib.h"
   )
 endif()
+
+if(_fuzz_enable_qt)
+  file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/qt_obj.h"
+    "class FuzzQtObject {\n"
+    "  Q_OBJECT\n"
+    "};\n"
+  )
+  file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/qt_obj.cpp"
+    "#include \"qt_obj.h\"\n"
+  )
+  file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/qt_form.ui"
+    "<ui version=\"4.0\">\n"
+    " <class>FuzzWidget</class>\n"
+    " <widget class=\"QWidget\" name=\"FuzzWidget\"/>\n"
+    "</ui>\n"
+  )
+  file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/qt_res.txt" "fuzz_resource\n")
+  file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/qt_res.qrc"
+    "<RCC><qresource prefix=\"/\"><file>qt_res.txt</file></qresource></RCC>\n"
+  )
+
+  add_library(Qt6::Core INTERFACE IMPORTED GLOBAL)
+  set_target_properties(Qt6::Core PROPERTIES
+    INTERFACE_QT_MAJOR_VERSION 6
+  )
+  set(Qt6Core_VERSION_MAJOR 6)
+  set(Qt6Core_VERSION_MINOR 5)
+  set(Qt6Core_VERSION_PATCH 0)
+
+  add_executable(Qt6::moc IMPORTED GLOBAL)
+  set_target_properties(Qt6::moc PROPERTIES IMPORTED_LOCATION "/bin/true")
+  add_executable(Qt6::uic IMPORTED GLOBAL)
+  set_target_properties(Qt6::uic PROPERTIES IMPORTED_LOCATION "/bin/true")
+  add_executable(Qt6::rcc IMPORTED GLOBAL)
+  set_target_properties(Qt6::rcc PROPERTIES IMPORTED_LOCATION "/bin/true")
+
+  add_library(fuzz_qt STATIC qt_obj.cpp qt_obj.h qt_res.qrc qt_form.ui)
+  target_link_libraries(fuzz_qt PRIVATE Qt6::Core)
+  target_include_directories(fuzz_qt PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+  set_target_properties(fuzz_qt PROPERTIES
+    AUTOMOC ON
+    AUTOUIC ON
+    AUTORCC ON
+    AUTOGEN_ORIGIN_DEPENDS ON
+  )
+endif()
+
 get_target_property(_fuzz_pre_core_type fuzz_pre_core TYPE)
 
 file(WRITE "${CMAKE_BINARY_DIR}/gen_src.c" "int generated_symbol(void) { return 0; }\n")
@@ -1194,7 +1241,8 @@ static void writeProjectCache(bool useNinja, int extraGen)
   fclose(fp);
 }
 
-static void writeProjectCMakeLists(uint8_t const* data, size_t contentSize)
+static void writeProjectCMakeLists(uint8_t const* data, size_t contentSize,
+                                   bool enableQt)
 {
   std::string cmakelists = g_sourceDir + "/CMakeLists.txt";
   FILE* fp = fopen(cmakelists.c_str(), "wb");
@@ -1204,6 +1252,7 @@ static void writeProjectCMakeLists(uint8_t const* data, size_t contentSize)
 
   fprintf(fp, "cmake_minimum_required(VERSION 3.10)\n");
   fprintf(fp, "project(FuzzTest LANGUAGES C CXX)\n");
+  fprintf(fp, "set(_fuzz_enable_qt %s)\n", enableQt ? "ON" : "OFF");
   if (data && contentSize > 0) {
     writeDeterministicPrelude(fp);
     fwrite(data, 1, contentSize, fp);
@@ -1508,6 +1557,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
   uint8_t ctrl = static_cast<uint8_t>(hash & 0xff);
   bool useNinja = (ctrl & 1);
   int extraGen = (ctrl >> 1) & 7;
+  bool enableQt = ((ctrl >> 4) & 0x7) == 0;
   size_t contentSize = size;
 
   // Create dummy source files for targets to reference
@@ -1515,7 +1565,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 
   // First pass: run with raw mutational content.
   writeProjectCache(useNinja, extraGen);
-  writeProjectCMakeLists(data, contentSize);
+  writeProjectCMakeLists(data, contentSize, enableQt);
   writeFileAPIQueries();
 
   int configureResult = 1;
@@ -1534,7 +1584,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
     // Re-run a deterministic project body (without fuzzed suffix) to drive
     // deep generator and FileAPI code paths even when mutational input fails.
     writeProjectCache(false, 0);
-    writeProjectCMakeLists(nullptr, 0);
+    writeProjectCMakeLists(nullptr, 0, false);
     writeFileAPIQueries();
 
     runConfigureAndGenerate(configureResult, generateResult);
