@@ -35,6 +35,7 @@
 
 #include "cmGlobalGenerator.h"
 #include "cmFileAPICodemodel.h"
+#include "cmGeneratorExpression.h"
 #include "cmMakefile.h"
 #include "cmMessenger.h"
 #include "cmState.h"
@@ -741,6 +742,98 @@ file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/gen_info2_$<CONFIG>.txt"
     "fileset_exists=$<FILE_SET_EXISTS:fuzz_pre_app,headers>\n"
     "fileset_type=$<FILE_SET_PROPERTY:fuzz_pre_app,headers,TYPE>\n"
 )
+file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/genex_matrix_$<CONFIG>.txt"
+  CONTENT
+    "strless_equal=$<STRLESS_EQUAL:abc,abc>\n"
+    "strgreater=$<STRGREATER:bcd,abc>\n"
+    "target_name=$<TARGET_NAME:fuzz_pre_app>\n"
+    "path_equal=$<PATH_EQUAL:/tmp/a/../a,/tmp/a>\n"
+    "path_root_name=$<PATH:GET_ROOT_NAME,/tmp/fuzz/a.txt>\n"
+    "path_root_dir=$<PATH:GET_ROOT_DIRECTORY,/tmp/fuzz/a.txt>\n"
+    "path_root_path=$<PATH:GET_ROOT_PATH,/tmp/fuzz/a.txt>\n"
+    "path_filename=$<PATH:GET_FILENAME,/tmp/fuzz/a.txt>\n"
+    "path_ext=$<PATH:GET_EXTENSION,/tmp/fuzz/archive.tar.gz>\n"
+    "path_ext_last=$<PATH:GET_EXTENSION,LAST_ONLY,/tmp/fuzz/archive.tar.gz>\n"
+    "path_stem=$<PATH:GET_STEM,/tmp/fuzz/archive.tar.gz>\n"
+    "path_stem_last=$<PATH:GET_STEM,LAST_ONLY,/tmp/fuzz/archive.tar.gz>\n"
+    "path_rel_part=$<PATH:GET_RELATIVE_PART,/tmp/fuzz/a.txt>\n"
+    "path_parent=$<PATH:GET_PARENT_PATH,/tmp/fuzz/a.txt>\n"
+    "path_has_root_name=$<PATH:HAS_ROOT_NAME,/tmp/fuzz/a.txt>\n"
+    "path_has_root_dir=$<PATH:HAS_ROOT_DIRECTORY,/tmp/fuzz/a.txt>\n"
+    "path_has_root_path=$<PATH:HAS_ROOT_PATH,/tmp/fuzz/a.txt>\n"
+    "path_has_filename=$<PATH:HAS_FILENAME,/tmp/fuzz/a.txt>\n"
+    "path_has_ext=$<PATH:HAS_EXTENSION,/tmp/fuzz/a.txt>\n"
+    "path_has_stem=$<PATH:HAS_STEM,/tmp/fuzz/a.txt>\n"
+    "path_has_rel=$<PATH:HAS_RELATIVE_PART,/tmp/fuzz/a.txt>\n"
+    "path_has_parent=$<PATH:HAS_PARENT_PATH,/tmp/fuzz/a.txt>\n"
+    "path_is_abs=$<PATH:IS_ABSOLUTE,/tmp/fuzz/a.txt>\n"
+    "path_is_rel=$<PATH:IS_RELATIVE,foo/bar>\n"
+    "path_is_prefix=$<PATH:IS_PREFIX,/tmp/fuzz,/tmp/fuzz/a/b>\n"
+    "path_is_prefix_norm=$<PATH:IS_PREFIX,NORMALIZE,/tmp/fuzz/./a,/tmp/fuzz/a/b>\n"
+    "path_cmake=$<PATH:CMAKE_PATH,/tmp/fuzz/a/b>\n"
+    "path_cmake_norm=$<PATH:CMAKE_PATH,NORMALIZE,/tmp/fuzz/a/../b>\n"
+    "path_native=$<PATH:NATIVE_PATH,/tmp/fuzz/a/b>\n"
+    "path_native_norm=$<PATH:NATIVE_PATH,NORMALIZE,/tmp/fuzz/a/../b>\n"
+    "path_append=$<PATH:APPEND,/tmp,fuzz,a,b.txt>\n"
+    "path_rm_filename=$<PATH:REMOVE_FILENAME,/tmp/fuzz/a.txt>\n"
+    "path_replace_filename=$<PATH:REPLACE_FILENAME,/tmp/fuzz/a.txt,b.txt>\n"
+    "path_rm_ext=$<PATH:REMOVE_EXTENSION,/tmp/fuzz/archive.tar.gz>\n"
+    "path_rm_ext_last=$<PATH:REMOVE_EXTENSION,LAST_ONLY,/tmp/fuzz/archive.tar.gz>\n"
+    "path_replace_ext=$<PATH:REPLACE_EXTENSION,/tmp/fuzz/a.txt,.cfg>\n"
+    "path_replace_ext_last=$<PATH:REPLACE_EXTENSION,LAST_ONLY,/tmp/fuzz/archive.tar.gz,.xz>\n"
+    "path_normal=$<PATH:NORMAL_PATH,/tmp/fuzz/a/../b//c.txt>\n"
+    "path_relative=$<PATH:RELATIVE_PATH,/tmp/fuzz/a/b,/tmp/fuzz>\n"
+    "path_absolute=$<PATH:ABSOLUTE_PATH,rel/path,/tmp/fuzz>\n"
+    "path_absolute_norm=$<PATH:ABSOLUTE_PATH,NORMALIZE,../x,/tmp/fuzz/a>\n"
+    "string_len=$<STRING:LENGTH,abcdef>\n"
+    "string_sub=$<STRING:SUBSTRING,abcdef,1,3>\n"
+    "string_find=$<STRING:FIND,abcbc,bc>\n"
+    "string_find_from_end=$<STRING:FIND,abcbc,bc,FROM:END>\n"
+    "string_match_once=$<STRING:MATCH,abc123,^[a-z]+,SEEK:ONCE>\n"
+    "string_match_all=$<STRING:MATCH,a1b2c3,[a-z],SEEK:ALL>\n"
+    "string_join=$<STRING:JOIN,|,aa,bb,cc>\n"
+    "string_ascii=$<STRING:ASCII,65,66,67>\n"
+    "string_timestamp=$<STRING:TIMESTAMP,%Y-%m-%d,UTC>\n"
+    "string_random=$<STRING:RANDOM,ALPHABET:abc123,LENGTH:8,RANDOM_SEED:7>\n"
+    "string_uuid=$<STRING:UUID,NAMESPACE:6ba7b810-9dad-11d1-80b4-00c04fd430c8,NAME:fuzz,TYPE:SHA1,CASE:UPPER>\n"
+    "string_replace=$<STRING:REPLACE,bananas,na,XX>\n"
+    "string_replace_regex=$<STRING:REPLACE,REGEX,a1b2c3,[0-9],_>\n"
+    "string_append=$<STRING:APPEND,alpha,_beta,_gamma>\n"
+    "string_prepend=$<STRING:PREPEND,tail,head_>\n"
+    "string_tolower=$<STRING:TOLOWER,HeLLo>\n"
+    "string_toupper=$<STRING:TOUPPER,HeLLo>\n"
+    "string_strip=$<STRING:STRIP,SPACES,  trim me  >\n"
+    "string_quote=$<STRING:QUOTE,REGEX,a+b?.*>\n"
+    "string_hex=$<STRING:HEX,fuzz>\n"
+    "string_hash=$<STRING:HASH,fuzz-data,ALGORITHM:SHA256>\n"
+    "string_cid=$<STRING:MAKE_C_IDENTIFIER,fuzz-value-2>\n"
+    "list_len=$<LIST:LENGTH,a$<SEMICOLON>b$<SEMICOLON>c>\n"
+    "list_get=$<LIST:GET,a$<SEMICOLON>b$<SEMICOLON>c,0,2>\n"
+    "list_join=$<LIST:JOIN,a$<SEMICOLON>b$<SEMICOLON>c,:>\n"
+    "list_sublist=$<LIST:SUBLIST,a$<SEMICOLON>b$<SEMICOLON>c$<SEMICOLON>d,1,2>\n"
+    "list_find=$<LIST:FIND,a$<SEMICOLON>b$<SEMICOLON>c,b>\n"
+    "list_append=$<LIST:APPEND,a$<SEMICOLON>b,c,d>\n"
+    "list_prepend=$<LIST:PREPEND,a$<SEMICOLON>b,z,y>\n"
+    "list_insert=$<LIST:INSERT,a$<SEMICOLON>b$<SEMICOLON>c,1,x,y>\n"
+    "list_pop_back=$<LIST:POP_BACK,a$<SEMICOLON>b$<SEMICOLON>c>\n"
+    "list_pop_front=$<LIST:POP_FRONT,a$<SEMICOLON>b$<SEMICOLON>c>\n"
+    "list_rmdup=$<LIST:REMOVE_DUPLICATES,a$<SEMICOLON>a$<SEMICOLON>b>\n"
+    "list_rm_item=$<LIST:REMOVE_ITEM,a$<SEMICOLON>b$<SEMICOLON>c,b>\n"
+    "list_rm_at=$<LIST:REMOVE_AT,a$<SEMICOLON>b$<SEMICOLON>c,1>\n"
+    "list_filter_inc=$<LIST:FILTER,a1$<SEMICOLON>b2$<SEMICOLON>c3,INCLUDE,^[ab]>\n"
+    "list_filter_exc=$<LIST:FILTER,a1$<SEMICOLON>b2$<SEMICOLON>c3,EXCLUDE,[0-9]>\n"
+    "list_transform_append=$<LIST:TRANSFORM,a$<SEMICOLON>b,APPEND,_x>\n"
+    "list_transform_prepend=$<LIST:TRANSFORM,a$<SEMICOLON>b,PREPEND,p_>\n"
+    "list_transform_upper=$<LIST:TRANSFORM,a$<SEMICOLON>b,TOUPPER>\n"
+    "list_transform_lower=$<LIST:TRANSFORM,A$<SEMICOLON>B,TOLOWER>\n"
+    "list_transform_strip=$<LIST:TRANSFORM, a $<SEMICOLON> b ,STRIP>\n"
+    "list_transform_replace=$<LIST:TRANSFORM,a1$<SEMICOLON>b2,REPLACE,[0-9],_>\n"
+    "list_transform_regex=$<LIST:TRANSFORM,a1$<SEMICOLON>b2$<SEMICOLON>c3,TOUPPER,REGEX,^[ab]>\n"
+    "list_transform_at=$<LIST:TRANSFORM,a$<SEMICOLON>b$<SEMICOLON>c,PREPEND,p_,AT,0$<SEMICOLON>2>\n"
+    "list_transform_for=$<LIST:TRANSFORM,a$<SEMICOLON>b$<SEMICOLON>c$<SEMICOLON>d,APPEND,_z,FOR,1,3,1>\n"
+    "list_reverse=$<LIST:REVERSE,a$<SEMICOLON>b$<SEMICOLON>c>\n"
+    "list_sort=$<LIST:SORT,b$<SEMICOLON>a$<SEMICOLON>c,COMPARE:STRING,CASE:INSENSITIVE,ORDER:DESCENDING>\n"
+)
 
 install(TARGETS fuzz_pre_core fuzz_pre_shared fuzz_pre_app
   EXPORT FuzzPreTargets
@@ -925,6 +1018,98 @@ target_compile_definitions(fuzz_app PRIVATE
 
 file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/gen_info_$<CONFIG>.txt"
   CONTENT "cfg=$<CONFIG>\napp=$<TARGET_FILE_NAME:fuzz_app>\n")
+file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/genex_matrix_fb_$<CONFIG>.txt"
+  CONTENT
+    "strless_equal=$<STRLESS_EQUAL:abc,abc>\n"
+    "strgreater=$<STRGREATER:bcd,abc>\n"
+    "target_name=$<TARGET_NAME:fuzz_app>\n"
+    "path_equal=$<PATH_EQUAL:/tmp/a/../a,/tmp/a>\n"
+    "path_root_name=$<PATH:GET_ROOT_NAME,/tmp/fuzz/a.txt>\n"
+    "path_root_dir=$<PATH:GET_ROOT_DIRECTORY,/tmp/fuzz/a.txt>\n"
+    "path_root_path=$<PATH:GET_ROOT_PATH,/tmp/fuzz/a.txt>\n"
+    "path_filename=$<PATH:GET_FILENAME,/tmp/fuzz/a.txt>\n"
+    "path_ext=$<PATH:GET_EXTENSION,/tmp/fuzz/archive.tar.gz>\n"
+    "path_ext_last=$<PATH:GET_EXTENSION,LAST_ONLY,/tmp/fuzz/archive.tar.gz>\n"
+    "path_stem=$<PATH:GET_STEM,/tmp/fuzz/archive.tar.gz>\n"
+    "path_stem_last=$<PATH:GET_STEM,LAST_ONLY,/tmp/fuzz/archive.tar.gz>\n"
+    "path_rel_part=$<PATH:GET_RELATIVE_PART,/tmp/fuzz/a.txt>\n"
+    "path_parent=$<PATH:GET_PARENT_PATH,/tmp/fuzz/a.txt>\n"
+    "path_has_root_name=$<PATH:HAS_ROOT_NAME,/tmp/fuzz/a.txt>\n"
+    "path_has_root_dir=$<PATH:HAS_ROOT_DIRECTORY,/tmp/fuzz/a.txt>\n"
+    "path_has_root_path=$<PATH:HAS_ROOT_PATH,/tmp/fuzz/a.txt>\n"
+    "path_has_filename=$<PATH:HAS_FILENAME,/tmp/fuzz/a.txt>\n"
+    "path_has_ext=$<PATH:HAS_EXTENSION,/tmp/fuzz/a.txt>\n"
+    "path_has_stem=$<PATH:HAS_STEM,/tmp/fuzz/a.txt>\n"
+    "path_has_rel=$<PATH:HAS_RELATIVE_PART,/tmp/fuzz/a.txt>\n"
+    "path_has_parent=$<PATH:HAS_PARENT_PATH,/tmp/fuzz/a.txt>\n"
+    "path_is_abs=$<PATH:IS_ABSOLUTE,/tmp/fuzz/a.txt>\n"
+    "path_is_rel=$<PATH:IS_RELATIVE,foo/bar>\n"
+    "path_is_prefix=$<PATH:IS_PREFIX,/tmp/fuzz,/tmp/fuzz/a/b>\n"
+    "path_is_prefix_norm=$<PATH:IS_PREFIX,NORMALIZE,/tmp/fuzz/./a,/tmp/fuzz/a/b>\n"
+    "path_cmake=$<PATH:CMAKE_PATH,/tmp/fuzz/a/b>\n"
+    "path_cmake_norm=$<PATH:CMAKE_PATH,NORMALIZE,/tmp/fuzz/a/../b>\n"
+    "path_native=$<PATH:NATIVE_PATH,/tmp/fuzz/a/b>\n"
+    "path_native_norm=$<PATH:NATIVE_PATH,NORMALIZE,/tmp/fuzz/a/../b>\n"
+    "path_append=$<PATH:APPEND,/tmp,fuzz,a,b.txt>\n"
+    "path_rm_filename=$<PATH:REMOVE_FILENAME,/tmp/fuzz/a.txt>\n"
+    "path_replace_filename=$<PATH:REPLACE_FILENAME,/tmp/fuzz/a.txt,b.txt>\n"
+    "path_rm_ext=$<PATH:REMOVE_EXTENSION,/tmp/fuzz/archive.tar.gz>\n"
+    "path_rm_ext_last=$<PATH:REMOVE_EXTENSION,LAST_ONLY,/tmp/fuzz/archive.tar.gz>\n"
+    "path_replace_ext=$<PATH:REPLACE_EXTENSION,/tmp/fuzz/a.txt,.cfg>\n"
+    "path_replace_ext_last=$<PATH:REPLACE_EXTENSION,LAST_ONLY,/tmp/fuzz/archive.tar.gz,.xz>\n"
+    "path_normal=$<PATH:NORMAL_PATH,/tmp/fuzz/a/../b//c.txt>\n"
+    "path_relative=$<PATH:RELATIVE_PATH,/tmp/fuzz/a/b,/tmp/fuzz>\n"
+    "path_absolute=$<PATH:ABSOLUTE_PATH,rel/path,/tmp/fuzz>\n"
+    "path_absolute_norm=$<PATH:ABSOLUTE_PATH,NORMALIZE,../x,/tmp/fuzz/a>\n"
+    "string_len=$<STRING:LENGTH,abcdef>\n"
+    "string_sub=$<STRING:SUBSTRING,abcdef,1,3>\n"
+    "string_find=$<STRING:FIND,abcbc,bc>\n"
+    "string_find_from_end=$<STRING:FIND,abcbc,bc,FROM:END>\n"
+    "string_match_once=$<STRING:MATCH,abc123,^[a-z]+,SEEK:ONCE>\n"
+    "string_match_all=$<STRING:MATCH,a1b2c3,[a-z],SEEK:ALL>\n"
+    "string_join=$<STRING:JOIN,|,aa,bb,cc>\n"
+    "string_ascii=$<STRING:ASCII,65,66,67>\n"
+    "string_timestamp=$<STRING:TIMESTAMP,%Y-%m-%d,UTC>\n"
+    "string_random=$<STRING:RANDOM,ALPHABET:abc123,LENGTH:8,RANDOM_SEED:7>\n"
+    "string_uuid=$<STRING:UUID,NAMESPACE:6ba7b810-9dad-11d1-80b4-00c04fd430c8,NAME:fuzz,TYPE:SHA1,CASE:UPPER>\n"
+    "string_replace=$<STRING:REPLACE,bananas,na,XX>\n"
+    "string_replace_regex=$<STRING:REPLACE,REGEX,a1b2c3,[0-9],_>\n"
+    "string_append=$<STRING:APPEND,alpha,_beta,_gamma>\n"
+    "string_prepend=$<STRING:PREPEND,tail,head_>\n"
+    "string_tolower=$<STRING:TOLOWER,HeLLo>\n"
+    "string_toupper=$<STRING:TOUPPER,HeLLo>\n"
+    "string_strip=$<STRING:STRIP,SPACES,  trim me  >\n"
+    "string_quote=$<STRING:QUOTE,REGEX,a+b?.*>\n"
+    "string_hex=$<STRING:HEX,fuzz>\n"
+    "string_hash=$<STRING:HASH,fuzz-data,ALGORITHM:SHA256>\n"
+    "string_cid=$<STRING:MAKE_C_IDENTIFIER,fuzz-value-2>\n"
+    "list_len=$<LIST:LENGTH,a$<SEMICOLON>b$<SEMICOLON>c>\n"
+    "list_get=$<LIST:GET,a$<SEMICOLON>b$<SEMICOLON>c,0,2>\n"
+    "list_join=$<LIST:JOIN,a$<SEMICOLON>b$<SEMICOLON>c,:>\n"
+    "list_sublist=$<LIST:SUBLIST,a$<SEMICOLON>b$<SEMICOLON>c$<SEMICOLON>d,1,2>\n"
+    "list_find=$<LIST:FIND,a$<SEMICOLON>b$<SEMICOLON>c,b>\n"
+    "list_append=$<LIST:APPEND,a$<SEMICOLON>b,c,d>\n"
+    "list_prepend=$<LIST:PREPEND,a$<SEMICOLON>b,z,y>\n"
+    "list_insert=$<LIST:INSERT,a$<SEMICOLON>b$<SEMICOLON>c,1,x,y>\n"
+    "list_pop_back=$<LIST:POP_BACK,a$<SEMICOLON>b$<SEMICOLON>c>\n"
+    "list_pop_front=$<LIST:POP_FRONT,a$<SEMICOLON>b$<SEMICOLON>c>\n"
+    "list_rmdup=$<LIST:REMOVE_DUPLICATES,a$<SEMICOLON>a$<SEMICOLON>b>\n"
+    "list_rm_item=$<LIST:REMOVE_ITEM,a$<SEMICOLON>b$<SEMICOLON>c,b>\n"
+    "list_rm_at=$<LIST:REMOVE_AT,a$<SEMICOLON>b$<SEMICOLON>c,1>\n"
+    "list_filter_inc=$<LIST:FILTER,a1$<SEMICOLON>b2$<SEMICOLON>c3,INCLUDE,^[ab]>\n"
+    "list_filter_exc=$<LIST:FILTER,a1$<SEMICOLON>b2$<SEMICOLON>c3,EXCLUDE,[0-9]>\n"
+    "list_transform_append=$<LIST:TRANSFORM,a$<SEMICOLON>b,APPEND,_x>\n"
+    "list_transform_prepend=$<LIST:TRANSFORM,a$<SEMICOLON>b,PREPEND,p_>\n"
+    "list_transform_upper=$<LIST:TRANSFORM,a$<SEMICOLON>b,TOUPPER>\n"
+    "list_transform_lower=$<LIST:TRANSFORM,A$<SEMICOLON>B,TOLOWER>\n"
+    "list_transform_strip=$<LIST:TRANSFORM, a $<SEMICOLON> b ,STRIP>\n"
+    "list_transform_replace=$<LIST:TRANSFORM,a1$<SEMICOLON>b2,REPLACE,[0-9],_>\n"
+    "list_transform_regex=$<LIST:TRANSFORM,a1$<SEMICOLON>b2$<SEMICOLON>c3,TOUPPER,REGEX,^[ab]>\n"
+    "list_transform_at=$<LIST:TRANSFORM,a$<SEMICOLON>b$<SEMICOLON>c,PREPEND,p_,AT,0$<SEMICOLON>2>\n"
+    "list_transform_for=$<LIST:TRANSFORM,a$<SEMICOLON>b$<SEMICOLON>c$<SEMICOLON>d,APPEND,_z,FOR,1,3,1>\n"
+    "list_reverse=$<LIST:REVERSE,a$<SEMICOLON>b$<SEMICOLON>c>\n"
+    "list_sort=$<LIST:SORT,b$<SEMICOLON>a$<SEMICOLON>c,COMPARE:STRING,CASE:INSENSITIVE,ORDER:DESCENDING>\n"
+)
 
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/subdir")
 file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/subdir/CMakeLists.txt"
@@ -1084,6 +1269,177 @@ static void runConfigureAndGenerate(int& configureResult, int& generateResult)
   cm.InitializeFileAPI();
   if (cm.GetFileAPI() && cm.GetGlobalGenerator()) {
     (void)cmFileAPICodemodelDump(*cm.GetFileAPI(), 2, 0);
+  }
+
+  if (cm.GetGlobalGenerator()) {
+    auto const& lgs = cm.GetGlobalGenerator()->GetLocalGenerators();
+    if (!lgs.empty()) {
+      cmLocalGenerator* lg = lgs.front().get();
+      cmGeneratorTarget const* headTarget =
+        cm.GetGlobalGenerator()->FindGeneratorTarget("fuzz_pre_app");
+      if (!headTarget) {
+        headTarget = cm.GetGlobalGenerator()->FindGeneratorTarget("fuzz_app");
+      }
+
+      static char const* const genexCases[] = {
+        "$<STRLESS_EQUAL:abc,abc>",
+        "$<STRGREATER:bcd,abc>",
+        "$<TARGET_EXISTS:fuzz_pre_core>",
+        "$<TARGET_EXISTS:fuzz_core>",
+        "$<TARGET_NAME_IF_EXISTS:fuzz_pre_core>",
+        "$<TARGET_NAME_IF_EXISTS:fuzz_core>",
+        "$<TARGET_NAME_IF_EXISTS:fuzz_pre_app>",
+        "$<TARGET_NAME_IF_EXISTS:fuzz_app>",
+        "$<TARGET_PROPERTY:fuzz_pre_core,TYPE>",
+        "$<TARGET_PROPERTY:fuzz_core,TYPE>",
+        "$<TARGET_PROPERTY:fuzz_pre_core,INCLUDE_DIRECTORIES>",
+        "$<TARGET_PROPERTY:fuzz_core,INCLUDE_DIRECTORIES>",
+        "$<TARGET_PROPERTY:fuzz_pre_app,LINK_LIBRARIES>",
+        "$<TARGET_PROPERTY:fuzz_app,LINK_LIBRARIES>",
+        "$<TARGET_FILE:fuzz_pre_app>",
+        "$<TARGET_FILE:fuzz_app>",
+        "$<TARGET_FILE_NAME:fuzz_pre_app>",
+        "$<TARGET_FILE_NAME:fuzz_app>",
+        "$<TARGET_FILE_DIR:fuzz_pre_app>",
+        "$<TARGET_FILE_DIR:fuzz_app>",
+        "$<TARGET_FILE_BASE_NAME:fuzz_pre_app>",
+        "$<TARGET_FILE_BASE_NAME:fuzz_app>",
+        "$<TARGET_FILE_PREFIX:fuzz_pre_app>",
+        "$<TARGET_FILE_PREFIX:fuzz_app>",
+        "$<TARGET_FILE_SUFFIX:fuzz_pre_app>",
+        "$<TARGET_FILE_SUFFIX:fuzz_app>",
+        "$<TARGET_LINKER_FILE:fuzz_pre_shared>",
+        "$<TARGET_LINKER_FILE:fuzz_shared>",
+        "$<TARGET_LINKER_FILE_NAME:fuzz_pre_shared>",
+        "$<TARGET_LINKER_FILE_NAME:fuzz_shared>",
+        "$<TARGET_LINKER_FILE_BASE_NAME:fuzz_pre_shared>",
+        "$<TARGET_LINKER_FILE_BASE_NAME:fuzz_shared>",
+        "$<TARGET_LINKER_LIBRARY_FILE:fuzz_pre_shared>",
+        "$<TARGET_LINKER_LIBRARY_FILE:fuzz_shared>",
+        "$<TARGET_LINKER_LIBRARY_FILE_NAME:fuzz_pre_shared>",
+        "$<TARGET_LINKER_LIBRARY_FILE_NAME:fuzz_shared>",
+        "$<TARGET_INTERMEDIATE_DIR:fuzz_pre_app>",
+        "$<TARGET_INTERMEDIATE_DIR:fuzz_app>",
+        "$<TARGET_POLICY:CMP0054>",
+        "$<TARGET_POLICY:CMP0077>",
+        "$<TARGET_OBJECTS:fuzz_pre_obj>",
+        "$<GENEX_EVAL:$<TARGET_PROPERTY:fuzz_pre_core,TYPE>>",
+        "$<GENEX_EVAL:$<TARGET_PROPERTY:fuzz_core,TYPE>>",
+        "$<TARGET_GENEX_EVAL:fuzz_pre_core,$<TARGET_PROPERTY:fuzz_pre_core,TYPE>>",
+        "$<TARGET_GENEX_EVAL:fuzz_core,$<TARGET_PROPERTY:fuzz_core,TYPE>>",
+        "$<SOURCE_EXISTS:main.c>",
+        "$<SOURCE_PROPERTY:main.c,LANGUAGE>",
+        "$<FILE_SET_EXISTS:fuzz_pre_app,headers>",
+        "$<FILE_SET_PROPERTY:fuzz_pre_app,headers,TYPE>",
+        "$<COMPILE_FEATURES:cxx_std_11>",
+        "$<COMPILE_LANGUAGE:C>",
+        "$<COMPILE_LANGUAGE:CXX>",
+        "$<COMPILE_LANG_AND_ID:C,GNU,Clang>",
+        "$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>",
+        "$<LINK_LANG_AND_ID:CXX,GNU,Clang>",
+        "$<C_COMPILER_LINKER_ID>",
+        "$<CXX_COMPILER_LINKER_ID>",
+        "$<C_COMPILER_LINKER_FRONTEND_VARIANT>",
+        "$<CXX_COMPILER_LINKER_FRONTEND_VARIANT>",
+        "$<PATH_EQUAL:/tmp/a/../a,/tmp/a>",
+        "$<PATH:GET_ROOT_NAME,/tmp/fuzz/a.txt>",
+        "$<PATH:GET_ROOT_DIRECTORY,/tmp/fuzz/a.txt>",
+        "$<PATH:GET_ROOT_PATH,/tmp/fuzz/a.txt>",
+        "$<PATH:GET_FILENAME,/tmp/fuzz/a.txt>",
+        "$<PATH:GET_EXTENSION,/tmp/fuzz/archive.tar.gz>",
+        "$<PATH:GET_EXTENSION,LAST_ONLY,/tmp/fuzz/archive.tar.gz>",
+        "$<PATH:GET_STEM,/tmp/fuzz/archive.tar.gz>",
+        "$<PATH:GET_STEM,LAST_ONLY,/tmp/fuzz/archive.tar.gz>",
+        "$<PATH:GET_RELATIVE_PART,/tmp/fuzz/a.txt>",
+        "$<PATH:GET_PARENT_PATH,/tmp/fuzz/a.txt>",
+        "$<PATH:HAS_ROOT_NAME,/tmp/fuzz/a.txt>",
+        "$<PATH:HAS_ROOT_DIRECTORY,/tmp/fuzz/a.txt>",
+        "$<PATH:HAS_ROOT_PATH,/tmp/fuzz/a.txt>",
+        "$<PATH:HAS_FILENAME,/tmp/fuzz/a.txt>",
+        "$<PATH:HAS_EXTENSION,/tmp/fuzz/a.txt>",
+        "$<PATH:HAS_STEM,/tmp/fuzz/a.txt>",
+        "$<PATH:HAS_RELATIVE_PART,/tmp/fuzz/a.txt>",
+        "$<PATH:HAS_PARENT_PATH,/tmp/fuzz/a.txt>",
+        "$<PATH:IS_ABSOLUTE,/tmp/fuzz/a.txt>",
+        "$<PATH:IS_RELATIVE,foo/bar>",
+        "$<PATH:IS_PREFIX,/tmp/fuzz,/tmp/fuzz/a/b>",
+        "$<PATH:IS_PREFIX,NORMALIZE,/tmp/fuzz/./a,/tmp/fuzz/a/b>",
+        "$<PATH:CMAKE_PATH,/tmp/fuzz/a/b>",
+        "$<PATH:CMAKE_PATH,NORMALIZE,/tmp/fuzz/a/../b>",
+        "$<PATH:NATIVE_PATH,/tmp/fuzz/a/b>",
+        "$<PATH:NATIVE_PATH,NORMALIZE,/tmp/fuzz/a/../b>",
+        "$<PATH:APPEND,/tmp,fuzz,a,b.txt>",
+        "$<PATH:REMOVE_FILENAME,/tmp/fuzz/a.txt>",
+        "$<PATH:REPLACE_FILENAME,/tmp/fuzz/a.txt,b.txt>",
+        "$<PATH:REMOVE_EXTENSION,/tmp/fuzz/archive.tar.gz>",
+        "$<PATH:REMOVE_EXTENSION,LAST_ONLY,/tmp/fuzz/archive.tar.gz>",
+        "$<PATH:REPLACE_EXTENSION,/tmp/fuzz/a.txt,.cfg>",
+        "$<PATH:REPLACE_EXTENSION,LAST_ONLY,/tmp/fuzz/archive.tar.gz,.xz>",
+        "$<PATH:NORMAL_PATH,/tmp/fuzz/a/../b//c.txt>",
+        "$<PATH:RELATIVE_PATH,/tmp/fuzz/a/b,/tmp/fuzz>",
+        "$<PATH:ABSOLUTE_PATH,rel/path,/tmp/fuzz>",
+        "$<PATH:ABSOLUTE_PATH,NORMALIZE,../x,/tmp/fuzz/a>",
+        "$<STRING:LENGTH,abcdef>",
+        "$<STRING:SUBSTRING,abcdef,1,3>",
+        "$<STRING:FIND,abcbc,bc>",
+        "$<STRING:FIND,abcbc,bc,FROM:END>",
+        "$<STRING:MATCH,abc123,^[a-z]+,SEEK:ONCE>",
+        "$<STRING:MATCH,a1b2c3,[a-z],SEEK:ALL>",
+        "$<STRING:JOIN,|,aa,bb,cc>",
+        "$<STRING:ASCII,65,66,67>",
+        "$<STRING:TIMESTAMP,%Y-%m-%d,UTC>",
+        "$<STRING:RANDOM,ALPHABET:abc123,LENGTH:8,RANDOM_SEED:7>",
+        "$<STRING:UUID,NAMESPACE:6ba7b810-9dad-11d1-80b4-00c04fd430c8,NAME:fuzz,TYPE:SHA1,CASE:UPPER>",
+        "$<STRING:REPLACE,bananas,na,XX>",
+        "$<STRING:REPLACE,REGEX,a1b2c3,[0-9],_>",
+        "$<STRING:APPEND,alpha,_beta,_gamma>",
+        "$<STRING:PREPEND,tail,head_>",
+        "$<STRING:TOLOWER,HeLLo>",
+        "$<STRING:TOUPPER,HeLLo>",
+        "$<STRING:STRIP,SPACES,  trim me  >",
+        "$<STRING:QUOTE,REGEX,a+b?.*>",
+        "$<STRING:HEX,fuzz>",
+        "$<STRING:HASH,fuzz-data,ALGORITHM:SHA256>",
+        "$<STRING:MAKE_C_IDENTIFIER,fuzz-value-2>",
+        "$<LIST:LENGTH,a;b;c>",
+        "$<LIST:GET,a;b;c,0,2>",
+        "$<LIST:JOIN,a;b;c,:>",
+        "$<LIST:SUBLIST,a;b;c;d,1,2>",
+        "$<LIST:FIND,a;b;c,b>",
+        "$<LIST:APPEND,a;b,c,d>",
+        "$<LIST:PREPEND,a;b,z,y>",
+        "$<LIST:INSERT,a;b;c,1,x,y>",
+        "$<LIST:POP_BACK,a;b;c>",
+        "$<LIST:POP_FRONT,a;b;c>",
+        "$<LIST:REMOVE_DUPLICATES,a;a;b>",
+        "$<LIST:REMOVE_ITEM,a;b;c,b>",
+        "$<LIST:REMOVE_AT,a;b;c,1>",
+        "$<LIST:FILTER,a1;b2;c3,INCLUDE,^[ab]>",
+        "$<LIST:FILTER,a1;b2;c3,EXCLUDE,[0-9]>",
+        "$<LIST:TRANSFORM,a;b,APPEND,_x>",
+        "$<LIST:TRANSFORM,a;b,PREPEND,p_>",
+        "$<LIST:TRANSFORM,a;b,TOUPPER>",
+        "$<LIST:TRANSFORM,A;B,TOLOWER>",
+        "$<LIST:TRANSFORM, a ; b ,STRIP>",
+        "$<LIST:TRANSFORM,a1;b2,REPLACE,[0-9],_>",
+        "$<LIST:TRANSFORM,a1;b2;c3,TOUPPER,REGEX,^[ab]>",
+        "$<LIST:TRANSFORM,a;b;c,PREPEND,p_,AT,0;2>",
+        "$<LIST:TRANSFORM,a;b;c;d,APPEND,_z,FOR,1,3,1>",
+        "$<LIST:REVERSE,a;b;c>",
+        "$<LIST:SORT,b;a;c,COMPARE:STRING,CASE:INSENSITIVE,ORDER:DESCENDING>",
+      };
+
+      for (char const* expr : genexCases) {
+        static char const* const configs[] = { "", "Debug", "Release" };
+        for (char const* cfg : configs) {
+          (void)cmGeneratorExpression::Evaluate(expr, lg, cfg, headTarget);
+          (void)cmGeneratorExpression::Evaluate(expr, lg, cfg, headTarget,
+                                                nullptr, nullptr, "C");
+          (void)cmGeneratorExpression::Evaluate(expr, lg, cfg, headTarget,
+                                                nullptr, nullptr, "CXX");
+        }
+      }
+    }
   }
 
   cmSystemTools::ChangeDirectory(cwd);
