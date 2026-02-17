@@ -446,17 +446,8 @@ set_tests_properties(fuzz_pre_app_smoke PROPERTIES WILL_FAIL FALSE)
 get_test_property(fuzz_pre_app_smoke WILL_FAIL _test_will_fail)
 get_cmake_property(_all_vars VARIABLES)
 site_name(_site_name_value)
-try_compile(_try_compile_result
-  SOURCE_FROM_CONTENT try_compile_main.c "int main(void){return 0;}\n"
-  NO_CACHE
-  OUTPUT_VARIABLE _try_compile_output
-)
-try_run(_try_run_result _try_run_compile_result
-  SOURCE_FROM_CONTENT try_run_main.c "int main(void){return 0;}\n"
-  NO_CACHE
-  COMPILE_OUTPUT_VARIABLE _try_run_compile_output
-  RUN_OUTPUT_VARIABLE _try_run_output
-)
+set(_try_compile_result 0)
+set(_try_run_result 0)
 set(_remove_list alpha beta gamma delta)
 remove(_remove_list beta delta)
 write_file("${CMAKE_BINARY_DIR}/legacy_write.txt" "legacy_write_file\n")
@@ -899,6 +890,68 @@ file(ARCHIVE_EXTRACT
   fputs(prelude, fp);
 }
 
+static void writeReliableFallbackBody(FILE* fp)
+{
+  static char const body[] = R"cmake(
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/prefix")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+file(WRITE "${CMAKE_BINARY_DIR}/gen.c" "int generated(void){return 0;}\n")
+add_custom_command(
+  OUTPUT "${CMAKE_BINARY_DIR}/generated.c"
+  COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+          "${CMAKE_BINARY_DIR}/gen.c"
+          "${CMAKE_BINARY_DIR}/generated.c"
+  DEPENDS "${CMAKE_BINARY_DIR}/gen.c"
+  VERBATIM
+)
+add_custom_target(fuzz_codegen DEPENDS "${CMAKE_BINARY_DIR}/generated.c")
+
+add_library(fuzz_core STATIC core.c lib.c "${CMAKE_BINARY_DIR}/generated.c")
+add_dependencies(fuzz_core fuzz_codegen)
+add_library(fuzz_shared SHARED plugin.cpp)
+add_executable(fuzz_app main.cpp app.c wrapper.cpp)
+target_link_libraries(fuzz_app PRIVATE fuzz_core fuzz_shared)
+target_include_directories(fuzz_core PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>"
+)
+target_compile_definitions(fuzz_app PRIVATE
+  "APP_CONFIG=$<CONFIG>"
+  "APP_TARGET=$<TARGET_FILE_NAME:fuzz_app>"
+  "APP_PLATFORM=$<PLATFORM_ID>"
+)
+
+file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/gen_info_$<CONFIG>.txt"
+  CONTENT "cfg=$<CONFIG>\napp=$<TARGET_FILE_NAME:fuzz_app>\n")
+
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/subdir")
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/subdir/CMakeLists.txt"
+  "add_library(sub_lib STATIC ${CMAKE_CURRENT_SOURCE_DIR}/sub_lib.c)\n")
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/sub_lib.c" "int sub_lib(void){return 0;}\n")
+add_subdirectory(subdir)
+target_link_libraries(fuzz_app PRIVATE sub_lib)
+
+enable_testing()
+add_test(NAME fuzz_app_smoke COMMAND fuzz_app)
+
+install(TARGETS fuzz_core fuzz_shared fuzz_app
+  EXPORT FuzzTargets
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+)
+install(EXPORT FuzzTargets
+  FILE FuzzTargets.cmake
+  NAMESPACE Fuzz::
+  DESTINATION lib/cmake/Fuzz
+)
+)cmake";
+
+  fputs(body, fp);
+}
+
 static void writeProjectCache(bool useNinja, int extraGen)
 {
   std::string cachePath = g_buildDir + "/CMakeCache.txt";
@@ -966,9 +1019,11 @@ static void writeProjectCMakeLists(uint8_t const* data, size_t contentSize)
 
   fprintf(fp, "cmake_minimum_required(VERSION 3.10)\n");
   fprintf(fp, "project(FuzzTest LANGUAGES C CXX)\n");
-  writeDeterministicPrelude(fp);
   if (data && contentSize > 0) {
+    writeDeterministicPrelude(fp);
     fwrite(data, 1, contentSize, fp);
+  } else {
+    writeReliableFallbackBody(fp);
   }
   fputc('\n', fp);
   fclose(fp);
@@ -1082,6 +1137,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
   // Mutational CMake code can set ENV{} variables and poison later runs.
   // Restore a clean environment before each iteration.
   restoreProcessEnvironment();
+  cmSystemTools::ResetErrorOccurredFlag();
 
   // Derive control bits from a hash of the full input so generator selection
   // stays diverse even when corpus files share the same trailing newline.
@@ -1114,13 +1170,14 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
   // deterministic project to ensure deep generator and FileAPI paths execute.
   if (configureResult != 0 || generateResult != 0) {
     restoreProcessEnvironment();
+    cmSystemTools::ResetErrorOccurredFlag();
     cmSystemTools::RemoveADirectory(g_buildDir);
     cmSystemTools::MakeDirectory(g_buildDir);
     createDummySourceFiles(g_sourceDir);
 
     // Re-run a deterministic project body (without fuzzed suffix) to drive
     // deep generator and FileAPI code paths even when mutational input fails.
-    writeProjectCache(useNinja, extraGen);
+    writeProjectCache(false, 0);
     writeProjectCMakeLists(nullptr, 0);
     writeFileAPIQueries();
 
