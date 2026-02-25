@@ -1,0 +1,15 @@
+{
+  "items": [
+    {"id": 1, "name": "first", "enabled": true, "tags": ["a", "b"]},
+    {"id": 2, "name": "second", "enabled": false, "tags": ["c"]},
+    {"id": 3, "name": "third", "enabled": true, "tags": []},
+    {"id": 4, "name": "fourth", "enabled": true, "tags": ["a", "d", "e"]},
+    {"id": 5, "name": "fifth", "enabled": false, "tags": ["b", "c"]},
+    {"id": 6, "name": "sixth", "enabled": true, "tags": ["f"]},
+    {"id": 7, "name": "seventh", "enabled": false, "tags": ["a"]},
+    {"id": 8, "name": "eighth", "enabled": true, "tags": ["b", "e", "f"]}
+  ],
+  "total": 8,
+  "page": 1,
+  "per_page": 10
+}

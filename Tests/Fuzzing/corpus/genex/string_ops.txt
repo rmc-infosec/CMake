@@ -1,0 +1,7 @@
+$<LOWER_CASE:HELLO_WORLD>
+$<UPPER_CASE:hello_world>
+$<MAKE_C_IDENTIFIER:my-var.name>
+$<JOIN:a;b;c;d,->
+$<REMOVE_DUPLICATES:a;b;a;c;b>
+$<FILTER:a;b;c;d;e,INCLUDE,^[a-c]>
+$<FILTER:a;b;c;d;e,EXCLUDE,^[a-c]>

@@ -1,0 +1,9 @@
+prefix=/opt/lib with spaces
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: SpecialChars
+Description: Library with special characters in paths and flags
+Version: 1.2.3-beta1
+Libs: -L"${libdir}" -lspecial -Wl,-rpath,${libdir}
+Cflags: -I"${includedir}" -DVERSION=\"1.2.3\" -DNAME="SpecialChars"

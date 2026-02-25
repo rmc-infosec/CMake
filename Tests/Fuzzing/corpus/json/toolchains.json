@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "toolchains": [
+    {
+      "compiler": {
+        "id": "GNU",
+        "version": "13.2.0",
+        "path": "/usr/bin/g++"
+      },
+      "sourceLanguage": "CXX",
+      "compileCommandFragments": [
+        {"fragment": "-std=c++20"},
+        {"fragment": "-Wall -Wextra"},
+        {"fragment": "-O2"}
+      ]
+    },
+    {
+      "compiler": {
+        "id": "Clang",
+        "version": "17.0.0",
+        "path": "/usr/bin/clang++",
+        "implicit": {
+          "includeDirectories": ["/usr/include", "/usr/local/include"],
+          "linkDirectories": ["/usr/lib", "/usr/local/lib"],
+          "linkLibraries": ["stdc++", "m"]
+        }
+      }
+    }
+  ]
+}

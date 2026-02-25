@@ -1,0 +1,12 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib/${host_triplet}
+includedir=${prefix}/include
+host_triplet=x86_64-linux-gnu
+custom_var=${prefix}/share/${host_triplet}/data
+
+Name: VarsOnly
+Description: Testing variable substitution chains
+Version: 0.1
+Libs: -L${libdir} -lvars
+Cflags: -I${includedir} -DDATA_DIR=\"${custom_var}\"

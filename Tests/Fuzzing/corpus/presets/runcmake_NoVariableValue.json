@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "configurePresets": [
+    {
+      "name": "NoVariableValue",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "VAR": {}
+      }
+    }
+  ]
+}

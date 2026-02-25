@@ -1,0 +1,19 @@
+$<CONFIG:Debug>
+$<CONFIG:Release>
+$<CONFIG:RelWithDebInfo>
+$<CONFIG:MinSizeRel>
+$<NOT:$<CONFIG:Debug>>
+$<PLATFORM_ID:Linux>
+$<PLATFORM_ID:Windows>
+$<PLATFORM_ID:Darwin>
+$<$<CONFIG:Debug>:DEBUG_MODE>
+$<$<CONFIG:Release>:NDEBUG>
+$<$<PLATFORM_ID:Linux>:-lpthread>
+$<$<AND:$<CONFIG:Debug>,$<PLATFORM_ID:Linux>>:-fsanitize=address>
+$<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:-g>
+$<$<NOT:$<CONFIG:Release>>:-DDEBUG>
+$<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra>
+$<$<CXX_COMPILER_ID:Clang>:-Weverything>
+$<$<C_COMPILER_ID:GNU>:-std=c11>
+$<$<CXX_COMPILER_ID:GNU,Clang>:-fPIC>
+$<$<CXX_COMPILER_VERSION:12.0>:-fcoroutines>

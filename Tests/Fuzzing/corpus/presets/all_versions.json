@@ -1,0 +1,31 @@
+{
+  "version": 8,
+  "cmakeMinimumRequired": {"major": 3, "minor": 27, "patch": 0},
+  "include": [],
+  "configurePresets": [
+    {
+      "name": "v6-features",
+      "binaryDir": "${sourceDir}/build",
+      "generator": "Ninja",
+      "warnings": {
+        "dev": true,
+        "deprecated": false,
+        "uninitialized": true
+      },
+      "errors": {
+        "dev": false,
+        "deprecated": true
+      },
+      "debug": {
+        "output": true,
+        "tryCompile": false,
+        "find": true
+      },
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_CXX_STANDARD": "20",
+        "BUILD_SHARED_LIBS": {"type": "BOOL", "value": "ON"}
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "configurePresets": [
+    {
+      "name": "InvalidToolsetStrategy",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build",
+      "toolset": {
+        "strategy": {}
+      }
+    }
+  ]
+}

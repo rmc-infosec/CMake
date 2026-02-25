@@ -1,0 +1,1 @@
+$<$<CONFIG:Debug>:-DDEBUG_MODE>$<$<CONFIG:Release>:-DNDEBUG>$<$<CONFIG:RelWithDebInfo>:-DNDEBUG -g>$<$<CONFIG:MinSizeRel>:-DNDEBUG -Os>

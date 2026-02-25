@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "configurePresets": [
+    {
+      "name": "GoodUserFromMain",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build"
+    }
+  ]
+}

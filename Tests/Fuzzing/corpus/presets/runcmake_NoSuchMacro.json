@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "configurePresets": [
+    {
+      "name": "NoSuchMacro",
+      "generator": "x",
+      "binaryDir": "${noexist}"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "compiler-gnu",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "compiler-clang",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "build-debug",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "build-release",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "gnu-debug",
+      "inherits": ["compiler-gnu", "build-debug"],
+      "binaryDir": "${sourceDir}/build/gnu-debug",
+      "generator": "Ninja"
+    },
+    {
+      "name": "clang-release",
+      "inherits": ["compiler-clang", "build-release"],
+      "binaryDir": "${sourceDir}/build/clang-release",
+      "generator": "Ninja"
+    },
+    {
+      "name": "deep-inherit",
+      "inherits": ["gnu-debug"],
+      "displayName": "Deep Inheritance Test",
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "17"
+      }
+    }
+  ]
+}

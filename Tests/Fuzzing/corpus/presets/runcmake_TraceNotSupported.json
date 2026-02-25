@@ -1,0 +1,13 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "TraceNotSupported",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build",
+      "trace": {
+        "mode": "expand"
+      }
+    }
+  ]
+}

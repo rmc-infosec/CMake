@@ -1,0 +1,20 @@
+$<LOWER_CASE:HELLO_WORLD_TEST>
+$<UPPER_CASE:hello_world_test>
+$<MAKE_C_IDENTIFIER:my-var.name/path>
+$<MAKE_C_IDENTIFIER:123-invalid>
+$<MAKE_C_IDENTIFIER:a b c>
+$<JOIN:one;two;three;four,, >
+$<JOIN:a;b;c,/>
+$<REMOVE_DUPLICATES:a;b;a;c;b;d;a>
+$<FILTER:src;lib;test;doc,INCLUDE,^(src|lib)>
+$<FILTER:main.c;test.c;util.h;readme.md,EXCLUDE,\.(h|md)$>
+$<IN_LIST:foo,bar;baz;foo;qux>
+$<IN_LIST:missing,bar;baz;qux>
+$<STREQUAL:abc,abc>
+$<STREQUAL:abc,ABC>
+$<STREQUAL:,>
+$<EQUAL:42,42>
+$<EQUAL:0,0>
+$<EQUAL:-1,-1>
+$<GENEX_EVAL:$<LOWER_CASE:HELLO>>
+$<GENEX_EVAL:$<IF:1,yes,no>>

@@ -1,0 +1,45 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "default",
+      "binaryDir": "${sourceDir}/build",
+      "generator": "Unix Makefiles"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build",
+      "configurePreset": "default"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "test",
+      "configurePreset": "default"
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "pkg",
+      "configurePreset": "default",
+      "generators": ["TGZ", "ZIP"],
+      "configurations": ["Release"],
+      "packageName": "MyProject",
+      "packageVersion": "1.0.0",
+      "packageDirectory": "${sourceDir}/packages",
+      "vendorName": "TestVendor"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "full-pipeline",
+      "steps": [
+        {"type": "configure", "name": "default"},
+        {"type": "build", "name": "build"},
+        {"type": "test", "name": "test"},
+        {"type": "package", "name": "pkg"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "version": 4,
+  "include": [
+    "subdir/CMakePresets.json",
+    "x/IncludeCommon.json"
+  ],
+  "configurePresets": [
+    {
+      "name": "Include",
+      "inherits": [
+        "IncludeCommon",
+        "Subdir"
+      ]
+    }
+  ]
+}

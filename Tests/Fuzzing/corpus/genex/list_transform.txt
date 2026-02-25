@@ -1,0 +1,6 @@
+$<JOIN:one;two;three,|>
+$<FILTER:a;b;c,d,EXCLUDE,^[cd]>
+$<REMOVE_DUPLICATES:a;a;b;c;c>
+$<LOWER_CASE:$<JOIN:HELLO;WORLD,_>>
+$<UPPER_CASE:$<JOIN:hello;world,_>>
+$<IF:$<IN_LIST:beta,alpha;beta;gamma>,yes,no>

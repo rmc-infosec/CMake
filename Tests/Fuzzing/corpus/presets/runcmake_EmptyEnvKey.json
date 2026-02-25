@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "configurePresets": [
+    {
+      "name": "EmptyEnvKey",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build",
+      "environment": {
+        "": "value"
+      }
+    }
+  ]
+}

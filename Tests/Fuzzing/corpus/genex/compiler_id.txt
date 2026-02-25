@@ -1,0 +1,1 @@
+$<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra>$<$<CXX_COMPILER_ID:Clang>:-Wall -Weverything>$<$<CXX_COMPILER_ID:MSVC>:/W4>

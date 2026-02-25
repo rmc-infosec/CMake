@@ -1,0 +1,13 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "FileDirFuture",
+      "generator": "x",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "TEST_FILE_DIR": "${fileDir}"
+      }
+    }
+  ]
+}

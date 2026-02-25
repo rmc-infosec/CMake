@@ -1,0 +1,11 @@
+$<PATH:GET_ROOT_NAME,/usr/local/lib>
+$<PATH:GET_ROOT_DIRECTORY,/usr/local/lib>
+$<PATH:GET_FILENAME,/usr/local/lib/libfoo.so>
+$<PATH:GET_EXTENSION,/usr/local/lib/libfoo.so.1.2>
+$<PATH:GET_STEM,/usr/local/lib/libfoo.so>
+$<PATH:GET_PARENT_PATH,/usr/local/lib/libfoo.so>
+$<PATH:APPEND,/usr/local,lib,cmake>
+$<PATH:CMAKE_PATH,/usr/local/lib>
+$<PATH:IS_ABSOLUTE,/usr/local>
+$<PATH:IS_RELATIVE,../foo>
+$<PATH:NORMAL_PATH,/usr/local/../lib/./cmake>

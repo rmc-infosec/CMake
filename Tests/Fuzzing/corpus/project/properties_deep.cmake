@@ -1,0 +1,16 @@
+enable_language(CXX)
+add_library(mylib STATIC lib.cpp)
+
+set_property(TARGET mylib PROPERTY CXX_STANDARD 17)
+set_property(TARGET mylib PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET mylib PROPERTY CXX_EXTENSIONS OFF)
+set_property(TARGET mylib PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET mylib APPEND PROPERTY COMPILE_DEFINITIONS "FOO=1" "BAR=2")
+set_property(TARGET mylib PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set_property(TARGET mylib PROPERTY LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+
+get_property(cxx_std TARGET mylib PROPERTY CXX_STANDARD)
+message(STATUS "C++ standard: ${cxx_std}")
+
+set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT mylib)
+get_property(startup_proj DIRECTORY PROPERTY VS_STARTUP_PROJECT)

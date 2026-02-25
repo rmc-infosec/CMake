@@ -1,0 +1,12 @@
+# Line comment
+message("a") # Inline comment
+#[[ Bracket comment ]]
+#[=[
+  Multi-line bracket comment
+  with = in marker
+]=]
+message("b") #[[ inline bracket comment ]]
+## Double hash
+### Triple hash
+set(x "y") # comment with "quotes" and ${vars}
+# comment with ( unbalanced parens

@@ -1,0 +1,6 @@
+$<AND:$<BOOL:TRUE>,$<BOOL:FALSE>>
+$<OR:$<BOOL:TRUE>,$<BOOL:FALSE>>
+$<NOT:$<BOOL:TRUE>>
+$<AND:$<OR:$<BOOL:1>,$<BOOL:0>>,$<NOT:$<BOOL:0>>>
+$<IF:$<BOOL:1>,yes,no>
+$<$<BOOL:${BUILD_SHARED}>:SHARED>
